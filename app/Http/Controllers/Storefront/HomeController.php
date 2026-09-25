@@ -39,15 +39,8 @@ class HomeController extends Controller
         $categories = Category::active()->withCount('products')->orderBy('sort_order')->get();
 
         if ($currentCity) {
-            $catalog = $this->catalogService->getProductsForCity(
-                cityId: $selectedCityId,
-                categoryId: $selectedCategoryId,
-                search: $search
-            );
-            $products = $catalog['products'];
-            
             $featuredProducts = [];
-            if (!empty($currentCity->featured_products)) {
+            if (! empty($currentCity->featured_products)) {
                 $featuredCatalog = $this->catalogService->getProductsForCity(
                     cityId: $selectedCityId,
                     inStockOnly: false,
@@ -55,8 +48,37 @@ class HomeController extends Controller
                 );
                 $featuredProducts = $featuredCatalog['products'] ?? [];
             }
-            
-            $estimatedMinutes = $catalog['city']['estimated_minutes'] ?? ($currentCity->estimated_delivery_minutes ?? 30);
+
+            // If no category and no search, we don't want all items.
+            // If there are featured products, we show those.
+            // If not, we fall back to the first category.
+            if (! $selectedCategoryId && ! $search) {
+                if (! empty($featuredProducts)) {
+                    $products = $featuredProducts;
+                } else {
+                    $firstCategory = $categories->first();
+                    if ($firstCategory) {
+                        $selectedCategoryId = $firstCategory->id;
+                        $catalog = $this->catalogService->getProductsForCity(
+                            cityId: $selectedCityId,
+                            categoryId: $selectedCategoryId,
+                            search: $search
+                        );
+                        $products = $catalog['products'];
+                    } else {
+                        $products = [];
+                    }
+                }
+                $estimatedMinutes = $currentCity->estimated_delivery_minutes ?? 30;
+            } else {
+                $catalog = $this->catalogService->getProductsForCity(
+                    cityId: $selectedCityId,
+                    categoryId: $selectedCategoryId,
+                    search: $search
+                );
+                $products = $catalog['products'];
+                $estimatedMinutes = $catalog['city']['estimated_minutes'] ?? ($currentCity->estimated_delivery_minutes ?? 30);
+            }
         } else {
             $products = [];
             $featuredProducts = [];

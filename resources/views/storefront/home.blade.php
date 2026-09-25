@@ -188,90 +188,24 @@
 
     <!-- Category Filter Chips Strip (§41.5) -->
     <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        <a 
-            href="{{ route('storefront.home', array_filter(['city_id' => $currentCity->id, 'q' => request('q')])) }}"
-            class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 {{ !request('category_id') ? 'bg-slate-950 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}"
-        >
-            <span>All Items</span>
-        </a>
+        @if(!empty($featuredProducts))
+            <a 
+                href="{{ route('storefront.home', ['city_id' => $currentCity->id]) }}"
+                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 {{ !$selectedCategoryId && !request('q') ? 'bg-slate-950 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}"
+            >
+                <span>Featured</span>
+            </a>
+        @endif
         @foreach($categories as $category)
             <a 
                 href="{{ route('storefront.home', array_filter(['category_id' => $category->id, 'city_id' => $currentCity->id, 'q' => request('q')])) }}"
-                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 {{ request('category_id') == $category->id ? 'bg-slate-950 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}"
+                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 {{ $selectedCategoryId == $category->id ? 'bg-slate-950 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}"
             >
                 <span>{{ $category->name }}</span>
                 <span class="text-[10px] opacity-75 font-mono">({{ $category->products_count }})</span>
             </a>
         @endforeach
     </div>
-
-    <!-- Featured Products (§41.4) -->
-    @if(!empty($featuredProducts) && !request('q') && !request('category_id'))
-        <div class="mt-8 mb-4">
-            <h2 class="text-lg sm:text-xl font-extrabold text-slate-950 tracking-tight flex items-center gap-2 mb-4">
-                <span>Featured in {{ $currentCity->name }}</span>
-                <span class="w-2 h-2 rounded-full bg-amber-500"></span>
-            </h2>
-            <div class="flex gap-4 overflow-x-auto snap-x scrollbar-none pb-4 -mx-4 px-4 sm:mx-0 sm:px-0">
-                @foreach($featuredProducts as $product)
-                    @php
-                        $primaryVariant = $product['variants'][0] ?? null;
-                        $hasStock = $product['is_available'];
-                        $isSale = $product['is_sale'];
-                        $regPrice = $product['primary_regular_price'] ?? $product['primary_price'];
-                        $currPrice = $product['primary_price'];
-                        $discountPct = ($regPrice > $currPrice) ? round((($regPrice - $currPrice) / $regPrice) * 100) : 0;
-                        $stockAvailable = $primaryVariant['available_stock'] ?? 0;
-                        $inCartItem = collect($cartDetailed['items'] ?? [])->firstWhere('variant_id', $primaryVariant['id'] ?? null);
-                        $inCartQty = $inCartItem['quantity'] ?? 0;
-                    @endphp
-                    <div class="snap-start shrink-0 w-40 sm:w-48 bg-white rounded-2xl p-3 border border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-md transition flex flex-col group relative">
-                        <div class="flex items-center justify-between gap-1 mb-2">
-                            <span class="delivery-badge px-2 py-0.5 rounded-md text-[10px] font-bold tracking-tight inline-flex items-center gap-1">
-                                <svg class="w-3 h-3 text-emerald-600" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                                <span>{{ $product['estimated_minutes'] }}m</span>
-                            </span>
-                            @if(! $hasStock)
-                                <span class="bg-rose-100 text-rose-800 border border-rose-200 px-1.5 py-0.5 rounded text-[9px] font-black uppercase">Sold Out</span>
-                            @elseif($discountPct > 0)
-                                <span class="bg-amber-100 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded text-[9px] font-black">{{ $discountPct }}% OFF</span>
-                            @endif
-                        </div>
-                        <a href="{{ route('storefront.product', $product['slug']) }}" class="block cursor-pointer flex-1">
-                            <div class="aspect-square bg-slate-50 rounded-xl overflow-hidden mb-2.5 flex items-center justify-center relative border border-slate-100">
-                                @if(!empty($product['image']))
-                                    <img src="{{ $product['image'] }}" alt="{{ $product['name'] }}" class="w-full h-full object-cover group-hover:scale-105 transition {{ ! $hasStock ? 'grayscale opacity-50' : '' }}" loading="lazy">
-                                @else
-                                    <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center"><svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg></div>
-                                @endif
-                            </div>
-                            <div class="space-y-1 mb-3">
-                                <h3 class="text-xs font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-amber-600">{{ $product['name'] }}</h3>
-                            </div>
-                        </a>
-                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between mt-auto">
-                            <div>
-                                <span class="text-xs font-extrabold text-slate-950 block font-mono">Rs {{ number_format($product['primary_price']) }}</span>
-                            </div>
-                            @if($hasStock && $primaryVariant)
-                                @if($inCartQty > 0)
-                                    <div class="flex items-center gap-1.5 bg-slate-950 text-white rounded-xl px-1.5 py-1 text-xs font-bold shadow-2xs">
-                                        <form action="{{ route('storefront.cart.update') }}" method="POST" class="inline">@csrf<input type="hidden" name="variant_id" value="{{ $primaryVariant['id'] }}"><input type="hidden" name="quantity" value="{{ $inCartQty - 1 }}"><button type="submit" class="px-1 text-amber-400 font-black">-</button></form>
-                                        <span class="font-mono text-[10px]">{{ $inCartQty }}</span>
-                                        <form action="{{ route('storefront.cart.update') }}" method="POST" class="inline">@csrf<input type="hidden" name="variant_id" value="{{ $primaryVariant['id'] }}"><input type="hidden" name="quantity" value="{{ $inCartQty + 1 }}"><button type="submit" class="px-1 text-amber-400 font-black">+</button></form>
-                                    </div>
-                                @else
-                                    <button type="button" onclick="addToCart({{ $primaryVariant['id'] }}, {{ $currentCity->id }}, this)" class="px-3 py-1.5 rounded-xl bg-slate-950 text-white text-xs font-bold active:scale-95">ADD</button>
-                                @endif
-                            @else
-                                <button disabled class="px-2 py-1 rounded-xl bg-slate-100 text-slate-400 text-[10px] font-bold">Out</button>
-                            @endif
-                        </div>
-                    </div>
-                @endforeach
-            </div>
-        </div>
-    @endif
 
     <!-- Product Grid Section (§33, §38.5, §41.4, §41.5) -->
     <div>
@@ -280,10 +214,10 @@
                 <h2 class="text-base sm:text-xl font-extrabold text-slate-950 tracking-tight flex items-center gap-2">
                     @if(request('q'))
                         <span>Search results for "{{ request('q') }}"</span>
-                    @elseif(request('category_id'))
+                    @elseif($selectedCategoryId)
                         <span>Category Products</span>
                     @else
-                        <span>Fast Delivery in {{ $currentCity->name }}</span>
+                        <span>Featured in {{ $currentCity->name }}</span>
                     @endif
                     <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
                 </h2>

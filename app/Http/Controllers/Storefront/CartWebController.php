@@ -31,6 +31,7 @@ class CartWebController extends Controller
             if ($result['success']) {
                 $result['cart'] = $this->cartService->getDetailedCart((int) $validated['city_id']);
             }
+
             return response()->json($result, $result['success'] ? 200 : 422);
         }
 

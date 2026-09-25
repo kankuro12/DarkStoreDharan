@@ -3,7 +3,10 @@
 namespace App\Providers;
 
 use App\Models\City;
+use App\Models\Setting;
 use App\Services\Cart\CartService;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -34,11 +37,20 @@ class AppServiceProvider extends ServiceProvider
                 $currentCity = $cityId ? $allCities->firstWhere('id', (int) $cityId) : null;
             }
 
+            if (Schema::hasTable('settings')) {
+                $storeSettings = Cache::rememberForever('store_settings', function () {
+                    return Setting::all()->pluck('value', 'key')->toArray();
+                });
+            } else {
+                $storeSettings = [];
+            }
+
             $view->with([
                 'allCities' => $allCities,
                 'currentCity' => $currentCity,
                 'cartItemCount' => $cartService->getItemCount(),
                 'cartDetailed' => $cartService->getDetailedCart($currentCity?->id),
+                'storeSettings' => $storeSettings,
             ]);
         });
     }

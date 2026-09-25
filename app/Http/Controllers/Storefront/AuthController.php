@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Socialite\Facades\Socialite;
-use App\Enums\UserRole;
 
 class AuthController extends Controller
 {
@@ -26,6 +26,7 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+
             return redirect()->intended('/');
         }
 
@@ -64,20 +65,22 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/');
     }
 
     public function redirectProvider($provider)
     {
-        if (!in_array($provider, ['google', 'facebook'])) {
+        if (! in_array($provider, ['google', 'facebook'])) {
             abort(404);
         }
+
         return Socialite::driver($provider)->redirect();
     }
 
     public function handleProviderCallback($provider)
     {
-        if (!in_array($provider, ['google', 'facebook'])) {
+        if (! in_array($provider, ['google', 'facebook'])) {
             abort(404);
         }
 
@@ -91,7 +94,7 @@ class AuthController extends Controller
 
         if ($user) {
             // Update provider if not set
-            if (!$user->provider_id) {
+            if (! $user->provider_id) {
                 $user->update([
                     'provider' => $provider,
                     'provider_id' => $socialUser->getId(),

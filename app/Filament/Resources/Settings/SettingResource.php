@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Filament\Resources\Categories;
+namespace App\Filament\Resources\Settings;
 
-use App\Filament\Resources\Categories\Pages\ManageCategories;
-use App\Models\Category;
+use App\Filament\Resources\Settings\Pages\ManageSettings;
+use App\Models\Setting;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
@@ -11,56 +11,65 @@ use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
+use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
-class CategoryResource extends Resource
+class SettingResource extends Resource
 {
-    protected static ?string $model = Category::class;
+    protected static ?string $model = Setting::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    protected static ?string $recordTitleAttribute = 'keykey';
 
     public static function form(Schema $schema): Schema
     {
         return $schema
             ->components([
-                Select::make('parent_id')
-                    ->relationship('parent', 'name'),
-                TextInput::make('name')
+                TextInput::make('key')
                     ->required(),
-                TextInput::make('slug')
-                    ->required(),
-                CuratorPicker::make('image'),
-                TextInput::make('sort_order')
+                Select::make('type')
+                    ->options([
+                        'text' => 'Text',
+                        'textarea' => 'Textarea',
+                        'image' => 'Image',
+                    ])
                     ->required()
-                    ->numeric()
-                    ->default(0),
-                TextInput::make('status')
+                    ->live()
+                    ->default('text'),
+                TextInput::make('value')
+                    ->label('Value (Text)')
+                    ->hidden(fn (Get $get) => $get('type') !== 'text'),
+                Textarea::make('value')
+                    ->label('Value (Textarea)')
+                    ->hidden(fn (Get $get) => $get('type') !== 'textarea')
+                    ->columnSpanFull(),
+                CuratorPicker::make('value')
+                    ->label('Value (Image)')
+                    ->hidden(fn (Get $get) => $get('type') !== 'image')
+                    ->columnSpanFull(),
+                TextInput::make('group')
                     ->required()
-                    ->default('active'),
+                    ->default('general'),
             ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
+            ->recordTitleAttribute('keykey')
             ->columns([
-                TextColumn::make('parent.name')
+                TextColumn::make('key')
                     ->searchable(),
-                TextColumn::make('name')
+                TextColumn::make('type')
                     ->searchable(),
-                TextColumn::make('slug')
-                    ->searchable(),
-                ImageColumn::make('image'),
-                TextColumn::make('sort_order')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('status')
+                TextColumn::make('group')
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->dateTime()
@@ -88,7 +97,7 @@ class CategoryResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ManageCategories::route('/'),
+            'index' => ManageSettings::route('/'),
         ];
     }
 }

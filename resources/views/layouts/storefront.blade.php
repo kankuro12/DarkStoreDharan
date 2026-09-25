@@ -4,7 +4,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>{{ $title ?? 'DarkStore Dharan - Fast Local Delivery in 30 Minutes' }}</title>
+    <title>{{ $title ?? ($storeSettings['default_meta_title'] ?? 'DarkStore Dharan - Fast Local Delivery in 30 Minutes') }}</title>
+    <meta name="description" content="{{ $metaDescription ?? ($storeSettings['default_meta_description'] ?? 'DarkStore delivers groceries and daily essentials in 15-30 minutes directly from neighborhood micro-warehouses.') }}">
+    
+    <meta property="og:title" content="{{ $title ?? ($storeSettings['default_meta_title'] ?? 'DarkStore Dharan') }}">
+    <meta property="og:description" content="{{ $metaDescription ?? ($storeSettings['default_meta_description'] ?? 'Fast local delivery.') }}">
+    <meta property="og:url" content="{{ request()->url() }}">
+    <meta property="og:type" content="{{ $metaType ?? 'website' }}">
+    @if(isset($metaImage) || isset($storeSettings['default_meta_image']))
+        <meta property="og:image" content="{{ isset($metaImage) ? $metaImage : asset('storage/' . $storeSettings['default_meta_image']) }}">
+        <meta name="twitter:image" content="{{ isset($metaImage) ? $metaImage : asset('storage/' . $storeSettings['default_meta_image']) }}">
+    @endif
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ $title ?? ($storeSettings['default_meta_title'] ?? 'DarkStore Dharan') }}">
+    <meta name="twitter:description" content="{{ $metaDescription ?? ($storeSettings['default_meta_description'] ?? 'Fast local delivery.') }}">
+
+    @if(isset($storeSettings['store_favicon']))
+        <link rel="icon" href="{{ asset('storage/' . $storeSettings['store_favicon']) }}">
+    @endif
     
     <!-- Modern Typography: Inter & Plus Jakarta Sans -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -82,12 +99,18 @@
                 <!-- Brand Wordmark & Location -->
                 <div class="flex items-center gap-3 sm:gap-6 shrink-0">
                     <a href="{{ route('storefront.home') }}" class="flex items-center gap-2 group cursor-pointer">
-                        <div class="w-9 h-9 rounded-xl bg-slate-950 text-amber-400 flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition duration-200">
-                            <svg class="w-5 h-5 fill-amber-400" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                        </div>
+                        @if(!empty($storeSettings['store_icon']))
+                            <div class="w-9 h-9 rounded-xl overflow-hidden shadow-xs group-hover:scale-105 transition duration-200">
+                                <img src="{{ asset('storage/' . $storeSettings['store_icon']) }}" alt="Icon" class="w-full h-full object-cover">
+                            </div>
+                        @else
+                            <div class="w-9 h-9 rounded-xl bg-slate-950 text-amber-400 flex items-center justify-center font-black shadow-xs group-hover:scale-105 transition duration-200">
+                                <svg class="w-5 h-5 fill-amber-400" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            </div>
+                        @endif
                         <div>
                             <span class="font-extrabold text-lg sm:text-xl tracking-tight text-slate-950 block leading-none">
-                                darkstore<span class="text-amber-500">.</span>np
+                                {{ $storeSettings['store_name'] ?? 'darkstore.np' }}
                             </span>
                             <span class="text-[9px] font-bold text-slate-600 tracking-wider uppercase block">Instant Fulfillment</span>
                         </div>
@@ -362,6 +385,7 @@
                 <div class="space-y-2">
                     <h5 class="font-bold text-slate-900 uppercase tracking-wider text-[11px]">Operations & Legal</h5>
                     <ul class="space-y-1.5 text-[11px]">
+                        <li><a href="{{ route('storefront.contact') }}" class="hover:text-slate-900 transition">Contact Us</a></li>
                         <li><a href="{{ route('storefront.privacy') }}" class="hover:text-slate-900 transition">Privacy & Data Policy</a></li>
                         <li><a href="{{ route('storefront.terms') }}" class="hover:text-slate-900 transition">Terms of Service</a></li>
                         @auth

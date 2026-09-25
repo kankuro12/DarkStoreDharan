@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Brands;
 
 use App\Filament\Resources\Brands\Pages\ManageBrands;
 use App\Models\Brand;
+use Awcodes\Curator\Components\Forms\CuratorPicker;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -13,6 +14,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 
@@ -30,7 +32,7 @@ class BrandResource extends Resource
                     ->required(),
                 TextInput::make('slug')
                     ->required(),
-                TextInput::make('logo'),
+                CuratorPicker::make('logo'),
                 TextInput::make('status')
                     ->required()
                     ->default('active'),
@@ -45,7 +47,7 @@ class BrandResource extends Resource
                     ->searchable(),
                 TextColumn::make('slug')
                     ->searchable(),
-                TextColumn::make('logo')
+                ImageColumn::make('logo')
                     ->searchable(),
                 TextColumn::make('status')
                     ->searchable(),

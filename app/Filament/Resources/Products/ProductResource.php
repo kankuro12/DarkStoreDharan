@@ -4,12 +4,12 @@ namespace App\Filament\Resources\Products;
 
 use App\Filament\Resources\Products\Pages\ManageProducts;
 use App\Models\Product;
+use Awcodes\Curator\Components\Forms\CuratorPicker;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -48,8 +48,7 @@ class ProductResource extends Resource
                     ])
                     ->default('active')
                     ->required(),
-                FileUpload::make('image')
-                    ->image(),
+                CuratorPicker::make('image'),
                 Textarea::make('description')
                     ->columnSpanFull(),
             ]);

@@ -4,11 +4,13 @@ namespace App\Filament\Resources\Cities;
 
 use App\Filament\Resources\Cities\Pages\ManageCities;
 use App\Models\City;
+use App\Models\Product;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -79,18 +81,18 @@ class CityResource extends Resource
                     ->numeric()
                     ->default(30)
                     ->helperText('Expected door-to-door delivery promise time.'),
-                \Filament\Forms\Components\Repeater::make('banners')
+                Repeater::make('banners')
                     ->label('Homepage Banners')
                     ->schema([
-                        \Filament\Forms\Components\TextInput::make('image_url')->required()->label('Image URL'),
-                        \Filament\Forms\Components\TextInput::make('link_url')->nullable()->label('Target Link'),
+                        TextInput::make('image_url')->required()->label('Image URL'),
+                        TextInput::make('link_url')->nullable()->label('Target Link'),
                     ])
                     ->columnSpanFull()
                     ->collapsible(),
                 Select::make('featured_products')
                     ->label('Featured Products')
                     ->multiple()
-                    ->options(\App\Models\Product::pluck('name', 'id'))
+                    ->options(Product::pluck('name', 'id'))
                     ->searchable()
                     ->columnSpanFull()
                     ->helperText('Select products to highlight on the city homepage.'),
