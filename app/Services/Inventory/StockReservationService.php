@@ -121,7 +121,10 @@ class StockReservationService
     }
 
     /**
-     * Release reservations back to available stock if payment fails or order is cancelled (§19).
+     * Release reservations back to available stock if payment fails or order is cancelled.
+     * Handles both a still-held reservation (stock never left available inventory) and an
+     * already-confirmed one (e.g. a COD order whose stock was permanently deducted at
+     * placement), restoring whichever quantity was actually taken.
      */
     public function release(Order|int $order): void
     {
@@ -129,7 +132,7 @@ class StockReservationService
 
         DB::transaction(function () use ($orderId) {
             $reservations = StockReservation::where('order_id', $orderId)
-                ->where('status', 'reserved')
+                ->whereIn('status', ['reserved', 'confirmed'])
                 ->lockForUpdate()
                 ->get();
 
@@ -140,7 +143,12 @@ class StockReservationService
                     ->first();
 
                 if ($inventory) {
-                    $inventory->reserved_quantity = max(0, $inventory->reserved_quantity - $reservation->quantity);
+                    if ($reservation->status === 'confirmed') {
+                        // Stock was already permanently deducted on confirmation; give it back.
+                        $inventory->quantity += $reservation->quantity;
+                    } else {
+                        $inventory->reserved_quantity = max(0, $inventory->reserved_quantity - $reservation->quantity);
+                    }
                     $inventory->save();
                 }
 

@@ -48,7 +48,13 @@ class ProductResource extends Resource
                     ])
                     ->default('active')
                     ->required(),
-                CuratorPicker::make('image'),
+                CuratorPicker::make('image')
+                    ->label('Primary Image'),
+                CuratorPicker::make('gallery')
+                    ->label('Additional Gallery Images')
+                    ->multiple()
+                    ->helperText('Extra photos shown in the storefront product gallery, alongside the primary image.')
+                    ->columnSpanFull(),
                 Textarea::make('description')
                     ->columnSpanFull(),
             ]);

@@ -113,6 +113,22 @@ class Order extends Model
     }
 
     /**
+     * Whether a customer can still self-cancel this order: only before the store has
+     * started packing it for dispatch. Past that point, cancellation goes through support.
+     */
+    public function isCancellable(): bool
+    {
+        return ! in_array($this->order_status, [
+            OrderStatus::Packed,
+            OrderStatus::ReadyForDispatch,
+            OrderStatus::Dispatched,
+            OrderStatus::Delivered,
+            OrderStatus::Cancelled,
+            OrderStatus::Returned,
+        ], true);
+    }
+
+    /**
      * Transition order status and record in status logs.
      */
     public function transitionOrderStatus(OrderStatus $newStatus, ?string $reason = null, ?int $userId = null): void

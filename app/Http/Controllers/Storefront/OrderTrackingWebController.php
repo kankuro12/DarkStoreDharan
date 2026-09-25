@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\ReturnRequest;
+use App\Services\Inventory\StockReservationService;
 use App\Services\Returns\ReturnService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -14,7 +15,8 @@ use Illuminate\View\View;
 class OrderTrackingWebController extends Controller
 {
     public function __construct(
-        protected ReturnService $returnService
+        protected ReturnService $returnService,
+        protected StockReservationService $stockReservationService
     ) {}
 
     public function show(string $orderNumber): View
@@ -56,7 +58,26 @@ class OrderTrackingWebController extends Controller
             'order' => $order,
             'steps' => $steps,
             'returnRequest' => $returnRequest,
+            'canCancel' => $order->isCancellable(),
         ]);
+    }
+
+    /**
+     * Self-service cancellation, mirroring Amazon-style "cancel before it ships": available
+     * any time before the store has packed the order for dispatch.
+     */
+    public function cancel(string $orderNumber, Request $request): RedirectResponse
+    {
+        $order = Order::where('order_number', $orderNumber)->firstOrFail();
+
+        if (! $order->isCancellable()) {
+            return back()->with('error', 'This order can no longer be cancelled as it is already '.$order->order_status->label().'.');
+        }
+
+        $order->transitionOrderStatus(OrderStatus::Cancelled, 'Cancelled by customer', auth()->id());
+        $this->stockReservationService->release($order);
+
+        return back()->with('success', "Order #{$order->order_number} has been cancelled.");
     }
 
     public function requestReturn(string $orderNumber, Request $request): RedirectResponse

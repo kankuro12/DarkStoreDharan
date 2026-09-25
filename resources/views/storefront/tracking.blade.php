@@ -27,7 +27,7 @@
         @endif
 
         <div class="pt-1 flex items-center justify-center gap-3">
-            <span class="inline-block px-3.5 py-1 text-xs font-black rounded-full uppercase tracking-wider bg-{{ $order->order_status->color() }}-100 text-{{ $order->order_status->color() }}-800 border border-{{ $order->order_status->color() }}-200">
+            <span class="inline-block px-3.5 py-1 text-xs font-black rounded-full uppercase tracking-wider border {{ $order->order_status->badgeClasses() }}">
                 {{ $order->order_status->label() }}
             </span>
             <span class="inline-flex items-center gap-1.5 bg-slate-900 text-white px-3.5 py-1 rounded-full text-xs font-mono">
@@ -35,16 +35,25 @@
                 <span class="text-amber-400 font-black tracking-wider">{{ substr(abs(crc32($order->order_number)), 0, 4) }}</span>
             </span>
         </div>
+
+        @if($canCancel)
+            <form action="{{ route('storefront.order.cancel', $order->order_number) }}" method="POST" onsubmit="return confirm('Cancel this order? Any reserved or deducted stock will be released.');">
+                @csrf
+                <button type="submit" class="text-[11px] font-bold text-rose-600 hover:text-rose-700 underline underline-offset-2 cursor-pointer">
+                    Cancel this order
+                </button>
+            </form>
+        @endif
     </div>
 
-    <!-- Stepper Progress (§28, §34) -->
+    <!-- Stepper Progress -->
     <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-6">
         <div class="flex items-center justify-between border-b border-slate-100 pb-3">
             <h2 class="text-sm font-extrabold text-slate-950">
                 Delivery Timeline & SLA Tracking
             </h2>
             <span class="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                ⚡ ~{{ $order->city?->estimated_delivery_minutes ?? 30 }}m SLA
+                ~{{ $order->city?->estimated_delivery_minutes ?? 30 }}m SLA
             </span>
         </div>
 
@@ -93,11 +102,11 @@
         @endif
     </div>
 
-    <!-- Order Items & Immutable Receipt Details (§16, §47) -->
+    <!-- Order Items & Receipt Details -->
     <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-4">
         <h2 class="text-sm font-extrabold text-slate-950 border-b border-slate-100 pb-3 flex items-center justify-between">
             <span>Items in Order ({{ $order->items->count() }})</span>
-            <span class="text-xs font-mono text-slate-500">Immutable Snapshot</span>
+            <span class="text-xs font-mono text-slate-500">Order Locked</span>
         </h2>
 
         <div class="divide-y divide-slate-100 space-y-2 text-xs">
@@ -135,7 +144,7 @@
             </p>
         </div>
 
-        <!-- Returns & Refunds Section (§47) -->
+        <!-- Returns & Refunds Section -->
         <div class="pt-4 border-t border-slate-100">
             @if($returnRequest)
                 <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs space-y-2">
@@ -161,7 +170,7 @@
                     class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-2xl transition cursor-pointer flex items-center justify-center gap-2 border border-slate-200"
                 >
                     <svg class="w-4 h-4 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
-                    <span>Request Return / Replacement (§47)</span>
+                    <span>Request Return / Replacement</span>
                 </button>
             @endif
         </div>
@@ -178,7 +187,7 @@
         </a>
     </div>
 
-    <!-- Native HTML5 Dialog: Return Request Modal (§47) -->
+    <!-- Native HTML5 Dialog: Return Request Modal -->
     <dialog id="return-modal" class="rounded-3xl p-0 w-full max-w-md shadow-2xl backdrop:bg-slate-950/60 border-0 m-auto">
         <div class="p-6 bg-white space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">

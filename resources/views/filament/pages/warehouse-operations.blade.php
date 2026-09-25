@@ -205,7 +205,7 @@
             </div>
         </div>
 
-        <!-- 5-Column High-Speed Operations Kanban Board (§22, §31.4) -->
+        <!-- 5-Column High-Speed Operations Kanban Board -->
         <div class="ops-board">
             
             <!-- Column 1: NEW ORDERS -->

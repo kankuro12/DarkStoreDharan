@@ -20,8 +20,16 @@ class Product extends Model
         'category_id',
         'description',
         'image',
+        'gallery',
         'status',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'gallery' => 'array',
+        ];
+    }
 
     public function category(): BelongsTo
     {
@@ -49,6 +57,32 @@ class Product extends Model
     }
 
     public function getImageAttribute($value)
+    {
+        return $this->resolveMediaUrl($value);
+    }
+
+    /**
+     * All gallery images, main image first, for the storefront product gallery.
+     *
+     * @return array<int, string>
+     */
+    public function getGalleryImagesAttribute(): array
+    {
+        $urls = collect($this->gallery ?? [])
+            ->map(fn ($ref) => $this->resolveMediaUrl($ref))
+            ->filter()
+            ->values()
+            ->all();
+
+        $mainImage = $this->image;
+        if ($mainImage && ! in_array($mainImage, $urls, true)) {
+            array_unshift($urls, $mainImage);
+        }
+
+        return $urls ?: array_filter([$mainImage]);
+    }
+
+    protected function resolveMediaUrl($value): ?string
     {
         if (is_numeric($value)) {
             $media = Media::find($value);

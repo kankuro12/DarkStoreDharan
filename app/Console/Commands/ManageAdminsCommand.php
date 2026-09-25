@@ -35,6 +35,7 @@ class ManageAdminsCommand extends Command
                     'create' => 'Create a new staff user',
                     'promote' => 'Promote/Change role of an existing user',
                     'demote' => 'Demote a staff member to customer',
+                    'password' => 'Change a user\'s password',
                     'exit' => 'Exit',
                 ],
                 default: 'list'
@@ -50,6 +51,7 @@ class ManageAdminsCommand extends Command
                 'create' => $this->createStaff(),
                 'promote' => $this->changeRole(),
                 'demote' => $this->demoteUser(),
+                'password' => $this->changePassword(),
             };
         }
     }
@@ -181,6 +183,41 @@ class ManageAdminsCommand extends Command
         if (confirm("Are you sure you want to demote {$user->name} to Customer?")) {
             $user->update(['role' => UserRole::Customer]);
             $this->info("Successfully demoted {$user->name} to Customer.");
+        }
+    }
+
+    protected function changePassword()
+    {
+        $userId = search(
+            label: 'Search user by name or email to change password',
+            options: fn (string $value) => strlen($value) > 0
+                ? User::where('name', 'like', "%{$value}%")
+                    ->orWhere('email', 'like', "%{$value}%")
+                    ->pluck('email', 'id')
+                    ->toArray()
+                : []
+        );
+
+        if (! $userId) {
+            return;
+        }
+
+        $user = User::find($userId);
+
+        $pass = password(
+            label: "Enter new password for {$user->name}",
+            required: true
+        );
+
+        $confirmPass = password(
+            label: 'Confirm new password',
+            required: true,
+            validate: fn (string $value) => $value !== $pass ? 'Passwords do not match.' : null
+        );
+
+        if (confirm("Are you sure you want to change the password for {$user->name}?")) {
+            $user->update(['password' => Hash::make($pass)]);
+            $this->info("Successfully changed password for {$user->name}.");
         }
     }
 }

@@ -6,7 +6,7 @@
 ])
 
 @section('content')
-<!-- Schema.org JSON-LD Structured Data (§43.1) -->
+<!-- Schema.org JSON-LD Structured Data -->
 @php
     $primaryVariant = $product['variants'][0] ?? null;
     $schemaData = [
@@ -66,14 +66,18 @@
     <!-- Product Hero Card Grid -->
     <div class="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
         
-        <!-- Left Column: Product Image & Badges -->
+        <!-- Left Column: Product Image Gallery & Badges -->
         <div class="space-y-4">
+            @php
+                $galleryImages = ! empty($product['gallery_images']) ? $product['gallery_images'] : array_filter([$product['image']]);
+            @endphp
             <div class="aspect-square bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 relative group">
-                @if($product['image'])
-                    <img 
-                        src="{{ $product['image'] }}" 
-                        alt="{{ $product['name'] }}" 
-                        class="w-full h-full object-cover group-hover:scale-105 transition duration-500"
+                @if(! empty($galleryImages))
+                    <img
+                        id="product-gallery-main-image"
+                        src="{{ $galleryImages[0] }}"
+                        alt="{{ $product['name'] }}"
+                        class="w-full h-full object-cover transition duration-300"
                     >
                 @else
                     <div class="w-20 h-20 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center">
@@ -81,13 +85,28 @@
                     </div>
                 @endif
 
-                <!-- Delivery Speed Badge (§38.5) -->
+                <!-- Delivery Speed Badge -->
                 <div class="absolute top-4 left-4 delivery-badge px-3 py-1.5 rounded-full text-xs font-bold tracking-tight inline-flex items-center gap-1.5 shadow-sm">
                     <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                     <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
                     <span>{{ $product['estimated_minutes'] }} min fast delivery in {{ $product['city_name'] }}</span>
                 </div>
             </div>
+
+            @if(count($galleryImages) > 1)
+                <!-- Thumbnail Rail -->
+                <div class="flex items-center gap-2.5 overflow-x-auto pb-1" id="product-gallery-thumbs">
+                    @foreach($galleryImages as $index => $img)
+                        <button
+                            type="button"
+                            onclick="selectGalleryImage('{{ $img }}', this)"
+                            class="gallery-thumb-btn shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition cursor-pointer {{ $index === 0 ? 'border-amber-500' : 'border-slate-200 hover:border-slate-300' }}"
+                        >
+                            <img src="{{ $img }}" alt="{{ $product['name'] }} thumbnail {{ $index + 1 }}" class="w-full h-full object-cover">
+                        </button>
+                    @endforeach
+                </div>
+            @endif
 
             <!-- Dark Store Micro-Fulfillment Features -->
             <div class="grid grid-cols-2 gap-3 pt-1">
@@ -134,7 +153,7 @@
                     {{ $product['description'] }}
                 </p>
 
-                <!-- Variants Selection Strip (§6) -->
+                <!-- Variants Selection Strip -->
                 <div class="pt-4 border-t border-slate-100 space-y-2.5">
                     <label class="block text-xs font-bold text-slate-900 uppercase tracking-wider">
                         Select Pack Size / Variant:
@@ -190,7 +209,7 @@
 
     </div>
 
-    <!-- Product Specifications & Highlights Accordion (§41) -->
+    <!-- Product Specifications & Highlights -->
     <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-4">
         <h3 class="text-sm font-extrabold text-slate-950 uppercase tracking-wider">Product Highlights & Storage</h3>
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
@@ -220,7 +239,7 @@
         </div>
     </div>
 
-    <!-- Related Products in Category (§41.5) -->
+    <!-- Related Products in Category -->
     @if(!empty($relatedProducts))
         <div class="space-y-4 pt-2">
             <div class="flex items-center justify-between">
@@ -272,6 +291,21 @@
 <script>
     let activeVariantId = {{ $primaryVariant['id'] ?? 'null' }};
     let cityId = {{ $currentCity?->id ?? 1 }};
+
+    function selectGalleryImage(src, btnEl) {
+        const mainImage = document.getElementById('product-gallery-main-image');
+        if (mainImage) {
+            mainImage.src = src;
+        }
+
+        document.querySelectorAll('.gallery-thumb-btn').forEach(btn => {
+            btn.classList.remove('border-amber-500');
+            btn.classList.add('border-slate-200');
+        });
+
+        btnEl.classList.add('border-amber-500');
+        btnEl.classList.remove('border-slate-200');
+    }
 
     function selectVariant(id, price, stock, sku, btnEl) {
         activeVariantId = id;

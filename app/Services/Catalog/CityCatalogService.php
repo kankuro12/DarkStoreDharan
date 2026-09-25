@@ -200,6 +200,7 @@ class CityCatalogService
             'name' => $product->name,
             'slug' => $product->slug,
             'image' => $product->image,
+            'gallery_images' => $product->gallery_images,
             'description' => $product->description,
             'category' => $product->category,
             'brand' => $product->brand,

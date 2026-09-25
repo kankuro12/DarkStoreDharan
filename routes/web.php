@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\Storefront\AccountController;
 use App\Http\Controllers\Storefront\AuthController;
 use App\Http\Controllers\Storefront\CartWebController;
 use App\Http\Controllers\Storefront\CheckoutWebController;
@@ -32,8 +33,19 @@ Route::middleware('guest')->group(function () {
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 
 Route::get('/dashboard', function () {
-    return redirect()->route('storefront.home');
+    return redirect()->route('storefront.account.orders');
 })->middleware('auth');
+
+// My Account: Order History, One-Click Reorder, Saved Addresses
+Route::prefix('account')->middleware('auth')->name('storefront.account.')->group(function () {
+    Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
+    Route::post('/orders/{order}/reorder', [AccountController::class, 'reorder'])->name('orders.reorder');
+
+    Route::get('/addresses', [AccountController::class, 'addresses'])->name('addresses');
+    Route::post('/addresses', [AccountController::class, 'storeAddress'])->name('addresses.store');
+    Route::put('/addresses/{address}', [AccountController::class, 'updateAddress'])->name('addresses.update');
+    Route::delete('/addresses/{address}', [AccountController::class, 'destroyAddress'])->name('addresses.destroy');
+});
 
 // Cart Actions (Web Session)
 Route::prefix('cart')->group(function () {
@@ -52,8 +64,9 @@ Route::post('/checkout', [CheckoutWebController::class, 'process'])->name('store
 // Live Order Tracking & Return Requests
 Route::get('/orders/{orderNumber}/tracking', [OrderTrackingWebController::class, 'show'])->name('storefront.order.tracking');
 Route::post('/orders/{orderNumber}/return', [OrderTrackingWebController::class, 'requestReturn'])->name('storefront.order.return');
+Route::post('/orders/{orderNumber}/cancel', [OrderTrackingWebController::class, 'cancel'])->name('storefront.order.cancel');
 
-// Legal & Compliance Pages (§48)
+// Legal & Compliance Pages
 Route::view('/privacy-policy', 'storefront.privacy')->name('storefront.privacy');
 Route::view('/terms-of-service', 'storefront.terms')->name('storefront.terms');
 

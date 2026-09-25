@@ -45,7 +45,7 @@
 </head>
 <body class="flex min-h-full flex-col font-sans pb-24 md:pb-12 text-slate-900 bg-slate-50">
 
-    <!-- Top Announcement Bar (§32, §41) -->
+    <!-- Top Announcement Bar -->
     <div class="bg-slate-950 text-white text-xs py-2 px-4 border-b border-slate-800">
         <div class="max-w-7xl mx-auto flex items-center justify-between gap-3 text-xs">
             <div class="flex items-center gap-2 overflow-hidden truncate">
@@ -73,7 +73,7 @@
                     Dark Store Hubs Online
                 </span>
                 @auth
-                    <a href="{{ url('/dashboard') }}" class="hover:text-white transition font-medium flex items-center gap-1">
+                    <a href="{{ route('storefront.account.orders') }}" class="hover:text-white transition font-medium flex items-center gap-1">
                         <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A13.937 13.937 0 0112 16c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0zm6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                         {{ auth()->user()->name }}
                     </a>
@@ -91,7 +91,7 @@
         </div>
     </div>
 
-    <!-- Main Navigation Header (§33, §41.5) -->
+    <!-- Main Navigation Header -->
     <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-16 gap-3 md:gap-8">
@@ -116,7 +116,7 @@
                         </div>
                     </a>
 
-                    <!-- Persistent City Selector Pill (§3, §38.5) -->
+                    <!-- Persistent City Selector Pill -->
                     <button 
                         type="button" 
                         onclick="document.getElementById('city-modal').showModal()"
@@ -144,7 +144,7 @@
                     </button>
                 </div>
 
-                <!-- Search Input Bar with Live Autocomplete (§42, §39.3) -->
+                <!-- Search Input Bar with Live Autocomplete -->
                 <div class="flex-1 max-w-lg hidden md:block relative">
                     <form action="{{ route('storefront.home') }}" method="GET" class="relative">
                         @if(request('category_id'))
@@ -167,7 +167,7 @@
                         <span class="absolute right-3 top-2.5 text-[10px] font-mono text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded border border-slate-300 pointer-events-none">/</span>
                     </form>
 
-                    <!-- Suggestions Dropdown List (§42.2) -->
+                    <!-- Suggestions Dropdown List -->
                     <ul id="search-autocomplete" class="hidden absolute left-0 right-0 top-full mt-2 bg-white rounded-2xl shadow-xl border border-slate-200 z-50 divide-y divide-slate-100 max-h-80 overflow-y-auto">
                     </ul>
                 </div>
@@ -237,7 +237,7 @@
         </div>
     </header>
 
-    <!-- Notification & Flash Alerts (§14, §38.5) -->
+    <!-- Notification & Flash Alerts -->
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-3 w-full">
         @if(session('cart_warning'))
             <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-r-xl mb-3 text-xs text-amber-900 shadow-xs flex items-start gap-3">
@@ -284,7 +284,7 @@
         @yield('content')
     </main>
 
-    <!-- Floating Sticky Cart Banner (§41.5) -->
+    <!-- Floating Sticky Cart Banner -->
     <div id="sticky-cart-bar" class="{{ $cartCount > 0 ? 'flex' : 'hidden' }} fixed bottom-18 md:bottom-6 left-4 right-4 md:left-auto md:right-8 md:max-w-md z-40 bg-slate-950 text-white rounded-2xl p-3 sm:p-4 shadow-2xl border border-slate-800 items-center justify-between gap-3 transition-all duration-300">
         <div class="flex items-center gap-3 min-w-0">
             <div class="w-10 h-10 rounded-xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0">
@@ -299,7 +299,7 @@
                     <span id="floating-cart-total" class="font-black text-sm text-amber-400">Rs {{ number_format($cartTotal) }}</span>
                 </div>
                 <p class="text-[11px] text-slate-300 truncate">
-                    ⚡ <strong>{{ $currentCity?->estimated_delivery_minutes ?? 30 }}m</strong> dispatch from {{ $currentCity?->name ?? 'Dark Store' }}
+                    <strong>{{ $currentCity?->estimated_delivery_minutes ?? 30 }}m</strong> dispatch from {{ $currentCity?->name ?? 'Dark Store' }}
                 </p>
             </div>
         </div>
@@ -309,11 +309,11 @@
             onclick="document.getElementById('cart-drawer').showModal()"
             class="px-4 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl uppercase tracking-wider transition shrink-0 cursor-pointer shadow-xs active:scale-95"
         >
-            View Bag ➔
+            View Bag
         </button>
     </div>
 
-    <!-- Storefront Footer (§48) -->
+    <!-- Storefront Footer -->
     <footer class="bg-white border-t border-slate-200 mt-16 pt-12 pb-24 md:pb-12 text-slate-600 text-xs">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-12">
             
@@ -389,8 +389,8 @@
                         <li><a href="{{ route('storefront.privacy') }}" class="hover:text-slate-900 transition">Privacy & Data Policy</a></li>
                         <li><a href="{{ route('storefront.terms') }}" class="hover:text-slate-900 transition">Terms of Service</a></li>
                         @auth
-                            <li><a href="{{ url('/dashboard') }}" class="hover:text-slate-900 transition">My Account</a></li>
-                            <li><a href="#" class="hover:text-slate-900 transition">Order History</a></li>
+                            <li><a href="{{ route('storefront.account.orders') }}" class="hover:text-slate-900 transition">Order History</a></li>
+                            <li><a href="{{ route('storefront.account.addresses') }}" class="hover:text-slate-900 transition">Saved Addresses</a></li>
                         @else
                             <li><a href="{{ route('login') }}" class="hover:text-slate-900 transition">Customer Login</a></li>
                         @endauth
@@ -416,7 +416,7 @@
         </div>
     </footer>
 
-    <!-- Native HTML5 Dialog: City Selector Modal (§3, §38.5, §39.2) -->
+    <!-- Native HTML5 Dialog: City Selector Modal -->
     <dialog id="city-modal" class="rounded-3xl p-0 w-full max-w-md shadow-2xl backdrop:bg-slate-950/60 border-0 m-auto">
         <div class="p-6 bg-white space-y-4">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -448,7 +448,7 @@
                                 </div>
                             </div>
                             <span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2.5 py-1 rounded-full">
-                                ⚡ {{ $city->estimated_delivery_minutes }} min SLA
+                                {{ $city->estimated_delivery_minutes }} min delivery
                             </span>
                         </button>
                     </form>
@@ -457,7 +457,7 @@
         </div>
     </dialog>
 
-    <!-- Native HTML5 Dialog: Cart Drawer Modal (§39.2) -->
+    <!-- Native HTML5 Dialog: Cart Drawer Modal -->
     <dialog id="cart-drawer" class="rounded-3xl p-0 w-full max-w-lg shadow-2xl backdrop:bg-slate-950/60 border-0 m-auto">
         <div class="p-6 bg-white space-y-4 flex flex-col max-h-[88vh]">
             <div class="flex items-center justify-between pb-3 border-b border-slate-100">
@@ -572,14 +572,14 @@
                         href="{{ route('storefront.checkout.show') }}" 
                         class="block w-full text-center py-3.5 bg-slate-950 hover:bg-black text-white font-extrabold text-xs rounded-2xl uppercase tracking-wider transition shadow-md cursor-pointer mt-2 active:scale-98"
                     >
-                        Proceed to Checkout ➔
+                        Proceed to Checkout
                     </a>
                 </div>
             @endif
         </div>
     </dialog>
 
-    <!-- Mobile Floating Bottom Pill Nav (§41.5) -->
+    <!-- Mobile Floating Bottom Pill Nav -->
     <nav class="md:hidden fixed bottom-3 left-4 right-4 z-50 glass-pill text-white rounded-full py-2.5 px-6 shadow-2xl flex items-center justify-around border border-slate-800">
         <a href="{{ route('storefront.home') }}" class="flex flex-col items-center gap-0.5 {{ request()->routeIs('storefront.home') ? 'text-amber-400' : 'text-slate-400 hover:text-white' }} cursor-pointer">
             <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
@@ -599,7 +599,7 @@
             @endif
         </button>
         @auth
-            <a href="{{ url('/dashboard') }}" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-white cursor-pointer">
+            <a href="{{ route('storefront.account.orders') }}" class="flex flex-col items-center gap-0.5 text-slate-400 hover:text-white cursor-pointer">
                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>
                 <span class="text-[9px] font-bold">Profile</span>
             </a>
@@ -611,7 +611,7 @@
         @endauth
     </nav>
 
-    <!-- Vanilla JS for Micro-Interactions (§39.3) -->
+    <!-- Vanilla JS for Micro-Interactions -->
     <script>
         // Optimistic Add to Cart via Fetch
         async function addToCart(variantId, cityId, buttonEl) {
@@ -710,7 +710,7 @@
             }
         });
 
-        // Debounced Live Search Autocomplete (§39.3, §42.2)
+        // Debounced Live Search Autocomplete
         const searchInput = document.getElementById('live-search-input');
         const searchDropdown = document.getElementById('search-autocomplete');
         let searchTimeout = null;
@@ -751,7 +751,7 @@
                                         </div>
                                         <div class="flex-1 min-w-0">
                                             <span class="font-bold text-xs text-slate-900 block truncate">${prod.name}</span>
-                                            <span class="text-[10px] text-slate-500 font-mono">Rs ${Number(prod.primary_price).toLocaleString()} • ⚡ ${prod.estimated_minutes}m</span>
+                                            <span class="text-[10px] text-slate-500 font-mono">Rs ${Number(prod.primary_price).toLocaleString()} • ${prod.estimated_minutes}m</span>
                                         </div>
                                         <span class="text-[10px] font-bold ${prod.is_available ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-rose-700 bg-rose-50 border border-rose-200'} px-2 py-0.5 rounded-full">
                                             ${prod.is_available ? 'In Stock' : 'Out'}
@@ -783,7 +783,7 @@
         }
 
         @if(! $currentCity)
-        // Auto-show city selection modal on initial load when customer has not chosen a city (§3, §38.5)
+        // Auto-show city selection modal on initial load when customer has not chosen a city
         document.addEventListener('DOMContentLoaded', function() {
             const cityModal = document.getElementById('city-modal');
             if (cityModal && typeof cityModal.showModal === 'function') {

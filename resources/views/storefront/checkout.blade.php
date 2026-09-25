@@ -33,10 +33,42 @@
                         <h2 class="font-extrabold text-sm sm:text-base text-slate-950">Delivery Address in {{ $city->name }}</h2>
                     </div>
                     <span class="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full">
-                        ⚡ Direct Hub Route
+                        Direct Hub Route
                     </span>
                 </div>
 
+                @if(isset($savedAddresses) && $savedAddresses->isNotEmpty())
+                    <!-- Saved Address Picker (Amazon-style: reuse a previous delivery address) -->
+                    <div class="space-y-2.5" id="saved-address-picker">
+                        <label class="block text-xs font-bold text-slate-700">Choose a saved address</label>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            @foreach($savedAddresses as $saved)
+                                <label class="flex items-start gap-2.5 p-3.5 rounded-2xl border cursor-pointer transition has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50/50 has-[:checked]:ring-2 has-[:checked]:ring-amber-500/20 border-slate-200 hover:border-slate-300">
+                                    <input
+                                        type="radio"
+                                        name="saved_address_choice"
+                                        value="{{ $saved->id }}"
+                                        class="mt-1 text-amber-500 focus:ring-amber-500"
+                                        onchange="useSavedAddress({{ $saved->id }})"
+                                        {{ $loop->first ? 'checked' : '' }}
+                                    >
+                                    <div class="min-w-0">
+                                        <span class="text-xs font-bold text-slate-900 block truncate">{{ $saved->full_name }}</span>
+                                        <span class="text-[11px] text-slate-500 block">{{ $saved->phone }}</span>
+                                        <span class="text-[11px] text-slate-500 leading-relaxed">{{ $saved->formatted_address }}</span>
+                                    </div>
+                                </label>
+                            @endforeach
+                            <label class="flex items-center gap-2.5 p-3.5 rounded-2xl border cursor-pointer transition has-[:checked]:border-amber-500 has-[:checked]:bg-amber-50/50 has-[:checked]:ring-2 has-[:checked]:ring-amber-500/20 border-slate-200 hover:border-slate-300">
+                                <input type="radio" name="saved_address_choice" value="new" class="text-amber-500 focus:ring-amber-500" onchange="useNewAddress()">
+                                <span class="text-xs font-bold text-slate-900">+ Deliver to a new address</span>
+                            </label>
+                        </div>
+                    </div>
+                    <input type="hidden" name="address_id" id="address-id-input" value="{{ $savedAddresses->first()->id }}">
+                @endif
+
+                <div id="new-address-fields" class="space-y-4 {{ isset($savedAddresses) && $savedAddresses->isNotEmpty() ? 'hidden' : '' }}">
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div>
                         <label class="block font-bold text-slate-700 mb-1.5">Full Name *</label>
@@ -100,6 +132,7 @@
                     </div>
                     <textarea id="delivery-notes-input" name="delivery_notes" rows="2" class="w-full rounded-xl border border-slate-300 p-3 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:outline-none text-xs transition" placeholder="e.g. Please ring doorbell twice or call upon gate arrival.">{{ old('delivery_notes') }}</textarea>
                 </div>
+                </div>
             </div>
 
             <!-- Tip Your Delivery Partner (Blinkit/Zepto Core Feature) -->
@@ -130,7 +163,7 @@
                 <input type="hidden" id="tip-amount-input" name="rider_tip" value="0">
             </div>
 
-            <!-- Step 2: Payment Resolution Engine (§10, §11, §38.4) -->
+            <!-- Step 2: Payment Method -->
             <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-xs space-y-4">
                 <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                     <div class="flex items-center gap-2.5">
@@ -300,7 +333,7 @@
 
                 <div class="pt-2 text-center space-y-1">
                     <p class="text-[11px] text-slate-500 font-medium">
-                        ⚡ Dispatched directly from {{ $city->name }} Dark Store.
+                        Dispatched directly from {{ $city->name }} Dark Store.
                     </p>
                     <p class="text-[10px] text-slate-600">
                         100% refund guarantee if cancelled before packing.
@@ -316,6 +349,34 @@
 <script>
     const baseTotal = {{ (float) $cart['grand_total'] }};
     let currentTip = 0;
+
+    function toggleNewAddressFieldsRequired(isRequired) {
+        const fields = document.querySelectorAll('#new-address-fields [name="full_name"], #new-address-fields [name="area"], #new-address-fields [name="street"], #new-address-fields [name="phone"]');
+        fields.forEach(field => {
+            if (isRequired) {
+                field.setAttribute('required', 'required');
+            } else {
+                field.removeAttribute('required');
+            }
+        });
+    }
+
+    function useSavedAddress(addressId) {
+        document.getElementById('address-id-input').value = addressId;
+        document.getElementById('new-address-fields').classList.add('hidden');
+        toggleNewAddressFieldsRequired(false);
+    }
+
+    function useNewAddress() {
+        document.getElementById('address-id-input').value = '';
+        document.getElementById('new-address-fields').classList.remove('hidden');
+        toggleNewAddressFieldsRequired(true);
+    }
+
+    @if(isset($savedAddresses) && $savedAddresses->isNotEmpty())
+        // A saved address is pre-selected on load, so the hidden manual fields start non-required.
+        toggleNewAddressFieldsRequired(false);
+    @endif
 
     function appendInstruction(text) {
         const textarea = document.getElementById('delivery-notes-input');
