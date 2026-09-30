@@ -7,6 +7,8 @@ use App\Http\Controllers\Storefront\CartWebController;
 use App\Http\Controllers\Storefront\CheckoutWebController;
 use App\Http\Controllers\Storefront\HomeController;
 use App\Http\Controllers\Storefront\OrderTrackingWebController;
+use App\Http\Controllers\Storefront\PasswordResetController;
+use App\Http\Controllers\Storefront\PhoneAuthController;
 use App\Http\Controllers\Storefront\ShareController;
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
@@ -29,6 +31,18 @@ Route::middleware('guest')->group(function () {
     // Socialite
     Route::get('/auth/{provider}/redirect', [AuthController::class, 'redirectProvider'])->name('social.redirect');
     Route::get('/auth/{provider}/callback', [AuthController::class, 'handleProviderCallback'])->name('social.callback');
+
+    // Phone + OTP sign in / sign up (unified: verifying a new number creates the account)
+    Route::post('/auth/otp/request', [PhoneAuthController::class, 'requestOtp'])->name('otp.request');
+    Route::post('/auth/otp/verify', [PhoneAuthController::class, 'verifyOtp'])->name('otp.verify');
+
+    // Forgot password: email link or phone OTP
+    Route::get('/forgot-password', [PasswordResetController::class, 'showForgotForm'])->name('password.request');
+    Route::post('/forgot-password/email', [PasswordResetController::class, 'sendResetLink'])->name('password.email');
+    Route::get('/reset-password/{token}', [PasswordResetController::class, 'showResetForm'])->name('password.reset');
+    Route::post('/reset-password', [PasswordResetController::class, 'reset'])->name('password.update');
+    Route::post('/forgot-password/phone/request', [PasswordResetController::class, 'requestPhoneOtp'])->name('password.phone.request');
+    Route::post('/forgot-password/phone/reset', [PasswordResetController::class, 'resetViaPhone'])->name('password.phone.reset');
 });
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
 

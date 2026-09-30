@@ -2,7 +2,10 @@
 
 namespace App\Enums;
 
-enum DeliveryStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum DeliveryStatus: string implements HasColor, HasLabel
 {
     case Pending = 'pending';
     case Assigned = 'assigned';
@@ -11,6 +14,16 @@ enum DeliveryStatus: string
     case Delivered = 'delivered';
     case Failed = 'failed';
     case Returned = 'returned';
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string
+    {
+        return $this->color();
+    }
 
     public function label(): string
     {

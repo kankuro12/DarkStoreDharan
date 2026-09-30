@@ -2,12 +2,19 @@
 
 namespace App\Enums;
 
-enum PaymentMethod: string
+use Filament\Support\Contracts\HasLabel;
+
+enum PaymentMethod: string implements HasLabel
 {
     case Cod = 'cod';
     case Esewa = 'esewa';
     case Khalti = 'khalti';
     case Fonepay = 'fonepay';
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
 
     public function label(): string
     {

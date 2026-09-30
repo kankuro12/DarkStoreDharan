@@ -2,7 +2,10 @@
 
 namespace App\Filament\Resources\Products;
 
-use App\Filament\Resources\Products\Pages\ManageProducts;
+use App\Filament\Resources\Products\Pages\CreateProduct;
+use App\Filament\Resources\Products\Pages\EditProduct;
+use App\Filament\Resources\Products\Pages\ListProducts;
+use App\Filament\Resources\Products\RelationManagers\VariantsRelationManager;
 use App\Models\Product;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
 use BackedEnum;
@@ -18,7 +21,9 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
@@ -31,9 +36,13 @@ class ProductResource extends Resource
         return $schema
             ->components([
                 TextInput::make('name')
-                    ->required(),
+                    ->required()
+                    ->live(onBlur: true)
+                    ->afterStateUpdated(fn (string $operation, $state, callable $set) => $operation === 'create' ? $set('slug', Str::slug($state)) : null),
                 TextInput::make('slug')
-                    ->required(),
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->helperText('Used in the storefront product URL.'),
                 Select::make('brand_id')
                     ->relationship('brand', 'name')
                     ->searchable(),
@@ -93,6 +102,21 @@ class ProductResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('created_at', 'desc')
+            ->filters([
+                SelectFilter::make('status')
+                    ->options([
+                        'active' => 'Active',
+                        'inactive' => 'Inactive',
+                        'draft' => 'Draft',
+                    ]),
+                SelectFilter::make('category_id')
+                    ->label('Category')
+                    ->relationship('category', 'name'),
+                SelectFilter::make('brand_id')
+                    ->label('Brand')
+                    ->relationship('brand', 'name'),
+            ])
             ->recordActions([
                 EditAction::make(),
                 DeleteAction::make(),
@@ -104,10 +128,19 @@ class ProductResource extends Resource
             ]);
     }
 
+    public static function getRelations(): array
+    {
+        return [
+            VariantsRelationManager::class,
+        ];
+    }
+
     public static function getPages(): array
     {
         return [
-            'index' => ManageProducts::route('/'),
+            'index' => ListProducts::route('/'),
+            'create' => CreateProduct::route('/create'),
+            'edit' => EditProduct::route('/{record}/edit'),
         ];
     }
 }

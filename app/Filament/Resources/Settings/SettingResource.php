@@ -13,6 +13,7 @@ use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Get;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -39,6 +40,7 @@ class SettingResource extends Resource
                         'text' => 'Text',
                         'textarea' => 'Textarea',
                         'image' => 'Image',
+                        'boolean' => 'Yes / No Flag',
                     ])
                     ->required()
                     ->live()
@@ -54,6 +56,11 @@ class SettingResource extends Resource
                     ->label('Value (Image)')
                     ->hidden(fn (Get $get) => $get('type') !== 'image')
                     ->columnSpanFull(),
+                Toggle::make('value')
+                    ->label('Enabled')
+                    ->hidden(fn (Get $get) => $get('type') !== 'boolean')
+                    ->formatStateUsing(fn ($state) => (bool) $state)
+                    ->dehydrateStateUsing(fn ($state) => $state ? '1' : '0'),
                 TextInput::make('group')
                     ->required()
                     ->default('general'),

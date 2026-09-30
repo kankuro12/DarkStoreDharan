@@ -41,4 +41,25 @@ return [
         'redirect' => env('GOOGLE_REDIRECT_URI', '/auth/google/callback'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | SMS Gateway (order tracking messages, phone OTP, phone password reset)
+    |--------------------------------------------------------------------------
+    |
+    | 'log' (default) just writes the message to the log so this works out of
+    | the box in local/dev without a real gateway. Switch SMS_DRIVER to
+    | 'sparrow' and fill in the credentials below to send real SMS in Nepal.
+    |
+    */
+
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+
+        'sparrow' => [
+            'token' => env('SPARROW_SMS_TOKEN'),
+            'from' => env('SPARROW_SMS_FROM', 'DarkStore'),
+            'url' => env('SPARROW_SMS_URL', 'https://api.sparrowsms.com/v2/sms/'),
+        ],
+    ],
+
 ];

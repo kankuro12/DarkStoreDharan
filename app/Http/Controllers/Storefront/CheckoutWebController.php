@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\City;
 use App\Models\ProductVariant;
+use App\Models\Setting;
 use App\Services\Cart\CartService;
 use App\Services\Checkout\CheckoutService;
 use App\Services\Payment\PaymentMethodService;
@@ -27,6 +28,12 @@ class CheckoutWebController extends Controller
 
     public function show(Request $request): View|RedirectResponse
     {
+        if ($this->loginRequiredForCheckout() && ! $request->user()) {
+            session(['url.intended' => $request->fullUrl()]);
+
+            return redirect()->route('login')->with('info', 'Please sign in to continue to checkout.');
+        }
+
         $cityId = $request->query('city_id') ?? $this->cartService->getSelectedCityId();
         if (! $cityId && $request->has('preview')) {
             $cityId = City::active()->first()?->id;
@@ -89,6 +96,10 @@ class CheckoutWebController extends Controller
 
     public function process(Request $request): RedirectResponse
     {
+        if ($this->loginRequiredForCheckout() && ! $request->user()) {
+            return redirect()->route('login')->with('error', 'Please sign in to continue to checkout.');
+        }
+
         $cityId = (int) $this->cartService->getSelectedCityId();
         $usingSavedAddress = $request->filled('address_id');
 
@@ -146,5 +157,14 @@ class CheckoutWebController extends Controller
         } catch (CartValidationException $e) {
             return back()->withInput()->with('error', $e->getMessage());
         }
+    }
+
+    /**
+     * Admin-configurable flag (Settings > require_login_for_checkout): when enabled, guests
+     * must sign in before they can complete checkout. Off by default so guest checkout works.
+     */
+    protected function loginRequiredForCheckout(): bool
+    {
+        return (bool) Setting::get('require_login_for_checkout', false);
     }
 }

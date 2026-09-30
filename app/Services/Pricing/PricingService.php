@@ -6,9 +6,14 @@ use App\Models\City;
 use App\Models\Coupon;
 use App\Models\DeliveryZone;
 use App\Models\ProductVariant;
+use App\Services\Delivery\FreeDeliveryMatrixService;
 
 class PricingService
 {
+    public function __construct(
+        protected FreeDeliveryMatrixService $freeDeliveryMatrixService
+    ) {}
+
     /**
      * Calculate all order financial totals server-side (§38.2, §38.4).
      *
@@ -50,6 +55,7 @@ class PricingService
             $calculatedItems[] = [
                 'variant_id' => $variant->id,
                 'product_id' => $variant->product_id,
+                'category_id' => $variant->product->category_id,
                 'product_name' => $variant->product->name.' - '.$variant->name,
                 'sku' => $variant->sku,
                 'quantity' => $qty,
@@ -75,17 +81,13 @@ class PricingService
             }
         }
 
-        // Determine Delivery Fee and Free Delivery Threshold (§5.1, §9)
+        // Determine Delivery Fee: city/zone base fee, waived by the free delivery matrix
+        // (a flat per-city subtotal threshold, or any active product/category rule).
         $baseDeliveryFee = $zone ? (float) $zone->delivery_fee : (float) $city->default_delivery_fee;
-        $freeThreshold = (float) $city->free_delivery_minimum;
 
-        $freeDeliveryApplied = false;
-        if ($freeThreshold > 0 && $subtotal >= $freeThreshold) {
-            $deliveryFee = 0.0;
-            $freeDeliveryApplied = true;
-        } else {
-            $deliveryFee = $baseDeliveryFee;
-        }
+        $freeDelivery = $this->freeDeliveryMatrixService->evaluate($cityId, $calculatedItems, $subtotal);
+        $freeDeliveryApplied = $freeDelivery['applied'];
+        $deliveryFee = $freeDeliveryApplied ? 0.0 : $baseDeliveryFee;
 
         $tax = 0.0; // Grocery tax exempt or inclusive by default
         $grandTotal = max(0.0, round($subtotal - $discount + $deliveryFee + $tax, 2));
@@ -99,6 +101,7 @@ class PricingService
             'grand_total' => $grandTotal,
             'coupon' => $appliedCoupon,
             'free_delivery_applied' => $freeDeliveryApplied,
+            'free_delivery_reason' => $freeDelivery['reason'],
         ];
     }
 }

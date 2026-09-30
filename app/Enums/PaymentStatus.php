@@ -2,7 +2,10 @@
 
 namespace App\Enums;
 
-enum PaymentStatus: string
+use Filament\Support\Contracts\HasColor;
+use Filament\Support\Contracts\HasLabel;
+
+enum PaymentStatus: string implements HasColor, HasLabel
 {
     case Unpaid = 'unpaid';
     case Pending = 'pending';
@@ -10,6 +13,16 @@ enum PaymentStatus: string
     case Failed = 'failed';
     case Refunded = 'refunded';
     case PartiallyRefunded = 'partially_refunded';
+
+    public function getLabel(): string
+    {
+        return $this->label();
+    }
+
+    public function getColor(): string
+    {
+        return $this->color();
+    }
 
     public function label(): string
     {

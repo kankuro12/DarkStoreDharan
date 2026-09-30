@@ -492,18 +492,23 @@
                 @php
                     $minFree = (float) ($currentCity?->free_delivery_minimum ?? 500);
                     $subtotal = $cartDetailed['subtotal'];
+                    $isFreeDelivery = ($cartDetailed['delivery_fee'] ?? 0) == 0;
                     $toFree = max(0, $minFree - $subtotal);
-                    $progressPct = min(100, round(($subtotal / max(1, $minFree)) * 100));
+                    $progressPct = $isFreeDelivery ? 100 : min(100, round(($subtotal / max(1, $minFree)) * 100));
                 @endphp
                 <div class="bg-amber-50/80 border border-amber-200/70 p-3 rounded-2xl space-y-2 text-xs">
                     <div class="flex items-center justify-between font-semibold text-amber-950">
-                        @if($toFree > 0)
+                        @if(! $isFreeDelivery && $toFree > 0)
                             <span>Add <strong>Rs {{ number_format($toFree) }}</strong> more for <strong>FREE DELIVERY</strong>!</span>
                             <span class="font-mono text-[11px]">{{ $progressPct }}%</span>
                         @else
                             <span class="text-emerald-700 font-bold flex items-center gap-1.5">
                                 <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                                Qualified for FREE Express Delivery!
+                                @if(! empty($cartDetailed['free_delivery_reason']))
+                                    {{ $cartDetailed['free_delivery_reason'] }} — FREE Delivery!
+                                @else
+                                    Qualified for FREE Express Delivery!
+                                @endif
                             </span>
                         @endif
                     </div>

@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
 use App\Exceptions\CartValidationException;
+use App\Jobs\SendOrderTrackingSms;
 use App\Models\Address;
 use App\Models\AuditLog;
 use App\Models\City;
@@ -101,7 +102,7 @@ class CheckoutService
         }
 
         // 5. Atomic Reservation and Order Creation (§21)
-        return DB::transaction(function () use (
+        $order = DB::transaction(function () use (
             $user,
             $city,
             $warehouse,
@@ -203,6 +204,11 @@ class CheckoutService
 
             return $order;
         });
+
+        // Send the live order-tracking link by SMS once the order is durably committed.
+        SendOrderTrackingSms::dispatch($order->id);
+
+        return $order;
     }
 
     /**

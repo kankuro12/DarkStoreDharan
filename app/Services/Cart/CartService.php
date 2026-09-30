@@ -317,6 +317,7 @@ class CartService
             'grand_total' => $pricing['grand_total'],
             'coupon' => $couponCode,
             'free_delivery_applied' => $pricing['free_delivery_applied'],
+            'free_delivery_reason' => $pricing['free_delivery_reason'] ?? null,
             'estimated_minutes' => $city?->estimated_delivery_minutes ?? 45,
         ];
     }
