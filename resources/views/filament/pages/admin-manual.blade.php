@@ -46,6 +46,7 @@
             <a href="#settings">14. Settings</a>
             <a href="#audit">15. Audit Logs</a>
             <a href="#routine">16. Daily Routine (Quick List)</a>
+            <a href="#rider">17. Rider Panel (Delivery App)</a>
         </div>
 
         <h2 id="signing-in">1. Signing In</h2>
@@ -170,18 +171,46 @@
             <li><strong>Brands</strong> — name and slug only. Used for filtering and product pages.</li>
         </ul>
 
-        <h2 id="inventory">8. Inventory</h2>
+        <h2 id="inventory">8. Inventory &amp; the Stock Ledger</h2>
         <p>
-            One row per variant per warehouse: how much is on the shelf. Fields include <strong>quantity</strong>
-            (physical stock), <strong>reserved quantity</strong> (held by pending orders) and the
-            <strong>reorder level</strong> that feeds the dashboard's Low Stock alert.
+            The <strong>Inventory &amp; Stock</strong> screen always works on <strong>one warehouse at a time</strong>.
+            Pick the warehouse in the selector at the top; every row and every action on the page applies to that
+            warehouse only.
+        </p>
+        <h3>Live stats (top of the page)</h3>
+        <ul>
+            <li><strong>Today's Orders</strong> / <strong>Active Orders</strong> — store order flow at a glance.</li>
+            <li><strong>Today's Sales</strong> — money booked today (cancellations excluded).</li>
+            <li><strong>Units Sold Today</strong> — counted from real stock-out ledger movements, not estimates.</li>
+            <li><strong>Low Stock</strong> — rows at or below their reorder level. The stats refresh automatically.</li>
+        </ul>
+        <h3>Changing stock — only through actions</h3>
+        <p>
+            Quantities are never edited by hand. Every unit in or out is posted to the immutable
+            <strong>Stock Ledger</strong> with who did it and why:
         </p>
         <ul>
-            <li>When stock physically arrives, increase quantity here.</li>
-            <li>If a row is missing for a variant/warehouse combination, create it — the storefront cannot sell what
-                has no inventory row.</li>
-            <li>Reserved quantities are managed by the store automatically at checkout; you do not edit them by hand.</li>
+            <li><strong>Add Stock</strong> (header button) — receive stock for any variant in this warehouse.</li>
+            <li><strong>Adjust Stock</strong> (row action) — corrections: positive to add, negative to deduct
+                (damage, shrinkage), reason mandatory.</li>
+            <li><strong>Add Stock to Selected</strong> (bulk action) — tick several rows, add the same quantity to all.</li>
+            <li><strong>Transfer</strong> (row action) — move unreserved stock to another warehouse. Creates paired
+                Transfer Out / Transfer In ledger entries under one transfer code.</li>
+            <li><strong>Ledger</strong> (row action) — quick look at the latest 25 movements for that SKU.</li>
+            <li><strong>Import Stock CSV</strong> — bulk receive from a spreadsheet (columns: <code>SKU</code>,
+                <code>Quantity</code>, <code>Reason</code>). Unknown SKUs fail the row instead of guessing.</li>
+            <li><strong>Export Stock CSV</strong> — download the current warehouse's stock sheet.</li>
         </ul>
+        <p>Only the <strong>Reorder Level</strong> stays editable on a row (Edit action).</p>
+        <h3>Reading the ledger</h3>
+        <ul>
+            <li><strong>Opening</strong> — auto-created the first time a SKU moves in a warehouse; freezes the starting balance.</li>
+            <li><strong>Stock In</strong> — purchases, returns, CSV imports, stock restores after cancellations.</li>
+            <li><strong>Stock Out</strong> — sales, written automatically the moment an order's stock is committed. Links to the order number.</li>
+            <li><strong>Transfer In / Transfer Out</strong> — paired rows sharing one <code>TRF-…</code> code.</li>
+        </ul>
+        <div class="note">The <strong>Stock Ledger</strong> page (sidebar) is read-only by design: search by SKU,
+            filter by warehouse, movement type and date. Nobody — admin included — can edit or delete an entry.</div>
 
         <h2 id="cities">9. Cities &amp; Warehouses</h2>
         <ul>
@@ -248,6 +277,29 @@
             <li><strong>Orders</strong> — filter <em>Dispatched</em> and confirm deliveries; mark <strong>Delivered</strong>.</li>
             <li>Top up <strong>Inventory</strong> for anything the dashboard flagged, then re-check Products/Variants.</li>
         </ol>
+
+        <h2 id="rider">17. Rider Panel (Delivery App)</h2>
+        <p>
+            Delivery boys get their own lightweight panel at <code>/rider</code> — separate from this admin panel.
+        </p>
+        <h3>Creating a rider login</h3>
+        <ol>
+            <li>Delivery Agents → edit or create the agent.</li>
+            <li>Set an <strong>email</strong> and <strong>password</strong> (both required for new agents) and keep
+                the status <code>active</code> — inactive agents cannot log in.</li>
+            <li>Give the rider the URL <code>/rider</code> with that email and password.</li>
+        </ol>
+        <h3>What the rider sees</h3>
+        <ul>
+            <li><strong>My Deliveries</strong> — every order dispatched to them, with the customer's address, phone,
+                item list and the COD cash amount to collect.</li>
+            <li>Buttons move the delivery forward: <strong>Picked Up</strong> → <strong>Out for Delivery</strong> →
+                <strong>Delivered</strong> (also marks the order delivered) or <strong>Failed Attempt</strong>
+                (with a retry button afterwards).</li>
+            <li>Riders only ever see and act on their own orders.</li>
+        </ul>
+        <div class="note">Assign riders as usual from <strong>Warehouse Floor Operations → Dispatch</strong>; the
+            order appears in that rider's list immediately.</div>
 
         <div class="warn">Superadmin housekeeping: the seeded admin account starts with a default password — change
             it, and keep one shared ops login out of customer hands. Backups of the database run from the server;

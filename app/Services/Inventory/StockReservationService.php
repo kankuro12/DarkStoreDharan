@@ -2,6 +2,7 @@
 
 namespace App\Services\Inventory;
 
+use App\Enums\InventoryMovementType;
 use App\Exceptions\OutOfStockException;
 use App\Models\Inventory;
 use App\Models\Order;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 
 class StockReservationService
 {
+    public function __construct(protected InventoryLedgerService $ledger) {}
+
     /**
      * Atomically reserve inventory items with row locking (§21, §38.2).
      *
@@ -95,8 +98,9 @@ class StockReservationService
     public function confirm(Order|int $order): void
     {
         $orderId = $order instanceof Order ? $order->id : $order;
+        $orderModel = $order instanceof Order ? $order : Order::find($order);
 
-        DB::transaction(function () use ($orderId) {
+        DB::transaction(function () use ($orderId, $orderModel) {
             $reservations = StockReservation::where('order_id', $orderId)
                 ->where('status', 'reserved')
                 ->lockForUpdate()
@@ -109,10 +113,23 @@ class StockReservationService
                     ->first();
 
                 if ($inventory) {
+                    $balanceBefore = (int) $inventory->quantity;
+
                     // Decrement both total quantity and reserved hold
                     $inventory->quantity = max(0, $inventory->quantity - $reservation->quantity);
                     $inventory->reserved_quantity = max(0, $inventory->reserved_quantity - $reservation->quantity);
                     $inventory->save();
+
+                    $this->ledger->record(
+                        $inventory,
+                        InventoryMovementType::Out,
+                        -$reservation->quantity,
+                        $orderModel ? "Sale — order {$orderModel->order_number}" : 'Sale',
+                        $orderModel,
+                        $orderModel?->order_number,
+                        null,
+                        $balanceBefore,
+                    );
                 }
 
                 $reservation->update(['status' => 'confirmed']);
@@ -129,8 +146,9 @@ class StockReservationService
     public function release(Order|int $order): void
     {
         $orderId = $order instanceof Order ? $order->id : $order;
+        $orderModel = $order instanceof Order ? $order : Order::find($order);
 
-        DB::transaction(function () use ($orderId) {
+        DB::transaction(function () use ($orderId, $orderModel) {
             $reservations = StockReservation::where('order_id', $orderId)
                 ->whereIn('status', ['reserved', 'confirmed'])
                 ->lockForUpdate()
@@ -143,6 +161,8 @@ class StockReservationService
                     ->first();
 
                 if ($inventory) {
+                    $balanceBefore = (int) $inventory->quantity;
+
                     if ($reservation->status === 'confirmed') {
                         // Stock was already permanently deducted on confirmation; give it back.
                         $inventory->quantity += $reservation->quantity;
@@ -150,6 +170,19 @@ class StockReservationService
                         $inventory->reserved_quantity = max(0, $inventory->reserved_quantity - $reservation->quantity);
                     }
                     $inventory->save();
+
+                    if ($reservation->status === 'confirmed') {
+                        $this->ledger->record(
+                            $inventory,
+                            InventoryMovementType::In,
+                            $reservation->quantity,
+                            $orderModel ? "Order cancelled — stock restored ({$orderModel->order_number})" : 'Order cancelled — stock restored',
+                            $orderModel,
+                            $orderModel?->order_number,
+                            null,
+                            $balanceBefore,
+                        );
+                    }
                 }
 
                 $reservation->update(['status' => 'released']);

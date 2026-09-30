@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\DeliveryAgent;
 use App\Models\User;
 
 return [
@@ -42,6 +43,11 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        'delivery' => [
+            'driver' => 'session',
+            'provider' => 'delivery_agents',
+        ],
     ],
 
     /*
@@ -65,6 +71,11 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', User::class),
+        ],
+
+        'delivery_agents' => [
+            'driver' => 'eloquent',
+            'model' => DeliveryAgent::class,
         ],
 
         // 'users' => [

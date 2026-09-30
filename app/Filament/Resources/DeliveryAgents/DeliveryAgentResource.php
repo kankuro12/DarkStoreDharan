@@ -32,6 +32,17 @@ class DeliveryAgentResource extends Resource
                 TextInput::make('phone')
                     ->tel()
                     ->required(),
+                TextInput::make('email')
+                    ->email()
+                    ->unique(ignoreRecord: true)
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->helperText('Rider panel login at /rider.'),
+                TextInput::make('password')
+                    ->password()
+                    ->revealable()
+                    ->dehydrated(fn ($state): bool => filled($state))
+                    ->required(fn (string $operation): bool => $operation === 'create')
+                    ->helperText('Leave blank to keep the current password.'),
                 Select::make('city_id')
                     ->relationship('city', 'name')
                     ->required(),
