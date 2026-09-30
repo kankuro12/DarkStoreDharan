@@ -11,6 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasColumn('cities', 'banners')) {
+            return;
+        }
+
         Schema::table('cities', function (Blueprint $table) {
             $table->json('banners')->nullable()->after('estimated_delivery_minutes');
             $table->json('featured_products')->nullable()->after('banners');
