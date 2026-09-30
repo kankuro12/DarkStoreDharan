@@ -1,4 +1,11 @@
 <div>
+    <x-filament-panels::header
+        :actions="$this->getCachedHeaderActions()"
+        :breadcrumbs="filament()->hasBreadcrumbs() ? $this->getBreadcrumbs() : []"
+        :heading="$this->getHeading()"
+        :subheading="$this->getSubheading()"
+    />
+
     <style>
         .inv-header { margin-bottom: 1rem; }
         .inv-header .row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; margin-bottom: 0.9rem; }
