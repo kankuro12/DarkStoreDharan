@@ -38,7 +38,7 @@ class AccountController extends Controller
      */
     public function reorder(Request $request, Order $order): RedirectResponse
     {
-        if ($order->user_id !== $request->user()->id) {
+        if ($order->customer_id !== $request->user()->id) {
             abort(403);
         }
 
@@ -101,7 +101,7 @@ class AccountController extends Controller
 
     public function updateAddress(Request $request, Address $address): RedirectResponse
     {
-        if ($address->user_id !== $request->user()->id) {
+        if ($address->customer_id !== $request->user()->id) {
             abort(403);
         }
 
@@ -123,7 +123,7 @@ class AccountController extends Controller
 
     public function destroyAddress(Request $request, Address $address): RedirectResponse
     {
-        if ($address->user_id !== $request->user()->id) {
+        if ($address->customer_id !== $request->user()->id) {
             abort(403);
         }
 

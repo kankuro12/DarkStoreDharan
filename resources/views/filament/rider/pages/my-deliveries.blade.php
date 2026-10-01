@@ -20,7 +20,16 @@
         .rider-card .actions .secondary { background: transparent; border-color: rgba(120,113,108,.45); color: inherit; }
         .rider-card .actions .danger { background: transparent; border-color: #dc2626; color: #dc2626; }
         .rider-empty { text-align: center; color: #9ca3af; padding: 2.5rem 1rem; border: 1px dashed rgba(120,113,108,.35); border-radius: .7rem; }
+        .rider-logout { font-size: .8rem; font-weight: 600; padding: .4rem .9rem; border-radius: .5rem; border: 1px solid rgba(220,38,38,.5); color: #dc2626; background: transparent; cursor: pointer; }
+        .rider-logout:hover { background: rgba(220,38,38,.08); }
     </style>
+
+    <div style="display:flex; justify-content:flex-end; margin-bottom:.6rem;">
+        <form method="POST" action="{{ route('filament.rider.auth.logout') }}">
+            @csrf
+            <button type="submit" class="rider-logout">Sign out</button>
+        </form>
+    </div>
 
     <div class="rider-stats" wire:poll.30s>
         <div class="rider-stat">

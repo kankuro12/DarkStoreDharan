@@ -119,7 +119,7 @@ class CheckoutWebController extends Controller
 
         if ($usingSavedAddress) {
             $address = Address::findOrFail($validated['address_id']);
-            if ($address->user_id !== $request->user()?->id) {
+            if ($address->customer_id !== $request->user()?->id) {
                 abort(403);
             }
 

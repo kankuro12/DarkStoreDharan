@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Customer;
 use App\Services\Auth\OtpService;
 use App\Services\Sms\SmsService;
 use Illuminate\Http\JsonResponse;
@@ -31,7 +31,7 @@ class PasswordResetController extends Controller
     {
         $request->validate(['email' => ['required', 'email']]);
 
-        $status = Password::sendResetLink($request->only('email'));
+        $status = Password::broker('customers')->sendResetLink($request->only('email'));
 
         return $status === Password::RESET_LINK_SENT
             ? back()->with('success', __($status))
@@ -54,10 +54,10 @@ class PasswordResetController extends Controller
             'password' => ['required', 'confirmed', 'min:8'],
         ]);
 
-        $status = Password::reset(
+        $status = Password::broker('customers')->reset(
             $request->only('email', 'password', 'password_confirmation', 'token'),
-            function (User $user, string $password) {
-                $user->forceFill(['password' => Hash::make($password)])->save();
+            function (Customer $customer, string $password) {
+                $customer->forceFill(['password' => Hash::make($password)])->save();
             }
         );
 
@@ -77,7 +77,7 @@ class PasswordResetController extends Controller
 
         $phone = SmsService::normalize($validated['phone']);
 
-        if (! User::where('phone', $phone)->exists()) {
+        if (! Customer::where('phone', $phone)->exists()) {
             // Don't reveal whether the phone is registered; respond the same way either way.
             return response()->json(['success' => true, 'message' => 'If that phone is registered, a code has been sent.']);
         }
@@ -104,13 +104,13 @@ class PasswordResetController extends Controller
             return back()->withErrors(['code' => 'That code is invalid or has expired.'])->withInput();
         }
 
-        $user = User::where('phone', $phone)->first();
+        $customer = Customer::where('phone', $phone)->first();
 
-        if (! $user) {
+        if (! $customer) {
             return back()->withErrors(['phone' => 'No account found for that phone number.'])->withInput();
         }
 
-        $user->forceFill(['password' => Hash::make($validated['password'])])->save();
+        $customer->forceFill(['password' => Hash::make($validated['password'])])->save();
 
         return redirect()->route('login')->with('success', 'Password reset. You can now log in.');
     }

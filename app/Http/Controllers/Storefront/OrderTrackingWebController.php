@@ -74,7 +74,7 @@ class OrderTrackingWebController extends Controller
             return back()->with('error', 'This order can no longer be cancelled as it is already '.$order->order_status->label().'.');
         }
 
-        $order->transitionOrderStatus(OrderStatus::Cancelled, 'Cancelled by customer', auth()->id());
+        $order->transitionOrderStatus(OrderStatus::Cancelled, 'Cancelled by customer', null);
         $this->stockReservationService->release($order);
 
         return back()->with('success', "Order #{$order->order_number} has been cancelled.");
@@ -96,8 +96,7 @@ class OrderTrackingWebController extends Controller
         $this->returnService->requestReturn(
             $order,
             $validated['reason_code'],
-            $validated['reason_details'],
-            auth()->id()
+            $validated['reason_details'] ?? null,
         );
 
         return back()->with('success', 'Return request submitted. Our support team will review it within 30 minutes.');

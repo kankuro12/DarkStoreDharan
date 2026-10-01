@@ -4,6 +4,7 @@ namespace App\Services\Payment;
 
 use App\Models\Address;
 use App\Models\City;
+use App\Models\Customer;
 use App\Models\ProductVariant;
 use App\Models\User;
 
@@ -26,7 +27,7 @@ class PaymentMethodService
         int $cityId,
         float $grandTotal,
         array $items,
-        ?User $user = null,
+        Customer|User|null $user = null,
         ?Address $address = null
     ): array {
         $city = City::find($cityId);

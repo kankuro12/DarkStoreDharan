@@ -11,9 +11,9 @@ use App\Jobs\SendOrderTrackingSms;
 use App\Models\Address;
 use App\Models\AuditLog;
 use App\Models\City;
+use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
-use App\Models\User;
 use App\Services\Cart\CartService;
 use App\Services\Fulfillment\WarehouseSelector;
 use App\Services\Inventory\StockReservationService;
@@ -47,7 +47,7 @@ class CheckoutService
      *
      * @throws CartValidationException
      */
-    public function placeOrder(array $data, ?User $user = null): Order
+    public function placeOrder(array $data, ?Customer $customer = null): Order
     {
         $cityId = (int) $data['city_id'];
         $items = $data['items'] ?? [];
@@ -68,7 +68,7 @@ class CheckoutService
         } elseif (! empty($data['address'])) {
             $addrData = $data['address'];
             $address = Address::create([
-                'user_id' => $user?->id,
+                'customer_id' => $customer?->id,
                 'city_id' => $cityId,
                 'delivery_zone_id' => $addrData['delivery_zone_id'] ?? null,
                 'full_name' => $addrData['full_name'],
@@ -92,7 +92,7 @@ class CheckoutService
             $cityId,
             $pricing['grand_total'],
             $items,
-            $user,
+            $customer,
             $address
         );
 
@@ -103,7 +103,7 @@ class CheckoutService
 
         // 5. Atomic Reservation and Order Creation (§21)
         $order = DB::transaction(function () use (
-            $user,
+            $customer,
             $city,
             $warehouse,
             $address,
@@ -126,7 +126,7 @@ class CheckoutService
 
             $order = Order::create([
                 'order_number' => $orderNumber,
-                'user_id' => $user?->id,
+                'customer_id' => $customer?->id,
                 'city_id' => $city->id,
                 'warehouse_id' => $warehouse->id,
                 'address_id' => $address?->id,
@@ -170,9 +170,9 @@ class CheckoutService
                 $this->stockReservationService->confirm($order);
             }
 
-            // Record initial lifecycle status log
+            // Record initial lifecycle status log (customer-driven; no staff user row)
             $order->statusLogs()->create([
-                'user_id' => $user?->id,
+                'user_id' => null,
                 'status_type' => 'order',
                 'from_status' => null,
                 'to_status' => $order->order_status->value,
@@ -199,7 +199,7 @@ class CheckoutService
                     'city' => $city->name,
                 ],
                 'New order placed by customer',
-                $user?->id
+                null
             );
 
             return $order;

@@ -39,8 +39,8 @@ class ReturnRequestResource extends Resource
                 Select::make('order_id')
                     ->relationship('order', 'order_number')
                     ->required(),
-                Select::make('user_id')
-                    ->relationship('user', 'name'),
+                Select::make('customer_id')
+                    ->relationship('customer', 'name'),
                 TextInput::make('reason_code')
                     ->required(),
                 Textarea::make('reason_details')
@@ -72,7 +72,7 @@ class ReturnRequestResource extends Resource
                     ->fontFamily('mono')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('user.name')
+                TextColumn::make('customer.name')
                     ->searchable(),
                 TextColumn::make('reason_code')
                     ->badge()

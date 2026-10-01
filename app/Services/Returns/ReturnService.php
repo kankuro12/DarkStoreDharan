@@ -28,7 +28,7 @@ class ReturnService
         return DB::transaction(function () use ($order, $reasonCode, $details, $userId) {
             $returnRequest = ReturnRequest::create([
                 'order_id' => $order->id,
-                'user_id' => $userId ?? $order->user_id,
+                'customer_id' => $order->customer_id,
                 'reason_code' => $reasonCode,
                 'reason_details' => $details,
                 'refund_amount' => $order->grand_total,

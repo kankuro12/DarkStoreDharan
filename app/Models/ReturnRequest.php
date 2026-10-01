@@ -12,7 +12,7 @@ class ReturnRequest extends Model
 
     protected $fillable = [
         'order_id',
-        'user_id',
+        'customer_id',
         'reason_code',
         'reason_details',
         'refund_amount',
@@ -40,8 +40,8 @@ class ReturnRequest extends Model
         return $this->belongsTo(Order::class);
     }
 
-    public function user(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 }

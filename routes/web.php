@@ -22,7 +22,7 @@ Route::get('/share/product/{slug}', [ShareController::class, 'product'])->name('
 Route::view('/contact', 'storefront.contact')->name('storefront.contact');
 
 // Authentication & Social Login
-Route::middleware('guest')->group(function () {
+Route::middleware('guest:customer')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
@@ -44,14 +44,14 @@ Route::middleware('guest')->group(function () {
     Route::post('/forgot-password/phone/request', [PasswordResetController::class, 'requestPhoneOtp'])->name('password.phone.request');
     Route::post('/forgot-password/phone/reset', [PasswordResetController::class, 'resetViaPhone'])->name('password.phone.reset');
 });
-Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth');
+Route::post('/logout', [AuthController::class, 'logout'])->name('logout')->middleware('auth:customer');
 
 Route::get('/dashboard', function () {
     return redirect()->route('storefront.account.orders');
-})->middleware('auth');
+})->middleware('auth:customer');
 
 // My Account: Order History, One-Click Reorder, Saved Addresses
-Route::prefix('account')->middleware('auth')->name('storefront.account.')->group(function () {
+Route::prefix('account')->middleware('auth:customer')->name('storefront.account.')->group(function () {
     Route::get('/orders', [AccountController::class, 'orders'])->name('orders');
     Route::post('/orders/{order}/reorder', [AccountController::class, 'reorder'])->name('orders.reorder');
 
@@ -90,7 +90,7 @@ if (app()->environment('local')) {
         $user = User::where('role', UserRole::SuperAdmin)->first()
             ?? User::first();
         if ($user) {
-            auth()->login($user);
+            auth('web')->login($user);
         }
 
         return redirect(request()->query('redirect', '/admin/warehouse-operations'));

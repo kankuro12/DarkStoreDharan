@@ -77,7 +77,7 @@ class OrderResource extends Resource
                         Section::make('Customer & Delivery Address')
                             ->columnSpan(2)
                             ->schema([
-                                TextEntry::make('user.name')->label('Customer')->placeholder('Guest checkout'),
+                                TextEntry::make('customer.name')->label('Customer')->placeholder('Guest checkout'),
                                 TextEntry::make('address.full_name')->label('Recipient Name'),
                                 TextEntry::make('address.phone')->label('Phone'),
                                 TextEntry::make('address.formatted_address')->label('Address')->columnSpanFull(),
@@ -119,7 +119,7 @@ class OrderResource extends Resource
                     ->fontFamily('mono')
                     ->searchable()
                     ->weight('bold'),
-                TextColumn::make('user.name')
+                TextColumn::make('customer.name')
                     ->label('Customer')
                     ->placeholder('Guest')
                     ->searchable(),

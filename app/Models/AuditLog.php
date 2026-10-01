@@ -47,7 +47,7 @@ class AuditLog extends Model
         ?int $userId = null
     ): self {
         return self::create([
-            'user_id' => $userId ?? auth()->id(),
+            'user_id' => $userId ?? (auth('web')->check() ? auth('web')->id() : null),
             'action' => $action,
             'subject_type' => get_class($subject),
             'subject_id' => $subject->getKey(),

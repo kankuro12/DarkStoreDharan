@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers\Storefront;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Customer;
 use App\Services\Auth\OtpService;
 use App\Services\Sms\SmsService;
 use Illuminate\Http\JsonResponse;
@@ -57,22 +56,21 @@ class PhoneAuthController extends Controller
             return back()->withErrors(['code' => 'That code is invalid or has expired.'])->withInput();
         }
 
-        $user = User::where('phone', $phone)->first();
+        $customer = Customer::where('phone', $phone)->first();
 
-        if (! $user) {
-            $user = User::create([
+        if (! $customer) {
+            $customer = Customer::create([
                 'name' => $validated['name'] ?: 'DarkStore Customer',
                 'email' => 'phone-'.$phone.'-'.Str::random(6).'@phone.darkstore.local',
                 'phone' => $phone,
                 'phone_verified_at' => now(),
                 'provider' => 'phone',
-                'role' => UserRole::Customer,
             ]);
-        } elseif (! $user->phone_verified_at) {
-            $user->update(['phone_verified_at' => now()]);
+        } elseif (! $customer->phone_verified_at) {
+            $customer->update(['phone_verified_at' => now()]);
         }
 
-        Auth::login($user, true);
+        Auth::guard('customer')->login($customer, true);
         $request->session()->regenerate();
 
         return redirect()->intended('/');

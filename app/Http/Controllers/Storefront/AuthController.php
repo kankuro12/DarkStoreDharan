@@ -2,9 +2,8 @@
 
 namespace App\Http\Controllers\Storefront;
 
-use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
-use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -24,7 +23,7 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        if (Auth::attempt($credentials, $request->boolean('remember'))) {
+        if (Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
             return redirect()->intended('/');
@@ -44,25 +43,24 @@ class AuthController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:customers'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
-        $user = User::create([
+        $customer = Customer::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
-            'role' => UserRole::Customer,
         ]);
 
-        Auth::login($user);
+        Auth::guard('customer')->login($customer);
 
         return redirect('/');
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
+        Auth::guard('customer')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
@@ -90,28 +88,27 @@ class AuthController extends Controller
             return redirect('/login')->with('error', 'Social login failed. Please try again.');
         }
 
-        $user = User::where('email', $socialUser->getEmail())->first();
+        $customer = Customer::where('email', $socialUser->getEmail())->first();
 
-        if ($user) {
+        if ($customer) {
             // Update provider if not set
-            if (! $user->provider_id) {
-                $user->update([
+            if (! $customer->provider_id) {
+                $customer->update([
                     'provider' => $provider,
                     'provider_id' => $socialUser->getId(),
                 ]);
             }
         } else {
-            // Create a new user
-            $user = User::create([
+            // Create a new customer
+            $customer = Customer::create([
                 'name' => $socialUser->getName() ?? $socialUser->getNickname(),
                 'email' => $socialUser->getEmail(),
                 'provider' => $provider,
                 'provider_id' => $socialUser->getId(),
-                'role' => UserRole::Customer,
             ]);
         }
 
-        Auth::login($user, true);
+        Auth::guard('customer')->login($customer, true);
 
         return redirect('/');
     }

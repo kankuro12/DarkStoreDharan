@@ -13,6 +13,7 @@ use App\Models\Brand;
 use App\Models\Category;
 use App\Models\City;
 use App\Models\Coupon;
+use App\Models\Customer;
 use App\Models\DeliveryAgent;
 use App\Models\DeliveryZone;
 use App\Models\Inventory;
@@ -89,11 +90,10 @@ class DatabaseSeeder extends Seeder
             'warehouse_id' => $whDharan->id,
         ]);
 
-        $customer = User::create([
+        $customer = Customer::create([
             'name' => 'Aayush Shrestha',
             'email' => 'customer@darkstore.np',
             'password' => Hash::make('password'),
-            'role' => UserRole::Customer,
             'phone' => '9842000000',
         ]);
 
@@ -587,7 +587,7 @@ class DatabaseSeeder extends Seeder
 
         // 13. Seed Sample Customer Address
         $sampleAddress = Address::create([
-            'user_id' => $customer->id,
+            'customer_id' => $customer->id,
             'city_id' => $cityDharan->id,
             'delivery_zone_id' => $zoneBhanuchowk->id,
             'full_name' => 'Aayush Shrestha',
@@ -603,7 +603,7 @@ class DatabaseSeeder extends Seeder
         // 14. Seed Sample Initial Orders (to populate the warehouse Kanban dashboard)
         $sampleOrder = Order::create([
             'order_number' => 'ORD-'.strtoupper(Str::random(8)),
-            'user_id' => $customer->id,
+            'customer_id' => $customer->id,
             'city_id' => $cityDharan->id,
             'warehouse_id' => $whDharan->id,
             'address_id' => $sampleAddress->id,

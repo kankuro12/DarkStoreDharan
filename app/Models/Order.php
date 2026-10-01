@@ -18,7 +18,7 @@ class Order extends Model
 
     protected $fillable = [
         'order_number',
-        'user_id',
+        'customer_id',
         'city_id',
         'warehouse_id',
         'address_id',
@@ -62,9 +62,9 @@ class Order extends Model
         ];
     }
 
-    public function user(): BelongsTo
+    public function customer(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Customer::class);
     }
 
     public function city(): BelongsTo
