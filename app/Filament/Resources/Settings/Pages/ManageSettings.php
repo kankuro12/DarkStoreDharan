@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Settings\Pages;
 
 use App\Filament\Resources\Settings\SettingResource;
+use App\Support\WarehouseScope;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
 
@@ -15,5 +16,10 @@ class ManageSettings extends ManageRecords
         return [
             CreateAction::make(),
         ];
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        return ! WarehouseScope::managedOnly();
     }
 }

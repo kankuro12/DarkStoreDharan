@@ -28,12 +28,17 @@
     <div class="inv-header">
         <div class="row">
             <label for="inventory-warehouse">Warehouse</label>
-            <select id="inventory-warehouse" class="warehouse" wire:model.live="warehouseId">
-                @foreach ($warehouses as $warehouse)
-                    <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
-                @endforeach
-            </select>
-            <span class="inv-note">Stock actions apply to this warehouse only.</span>
+            @if ($locked ?? false)
+                <strong>{{ $warehouses->firstWhere('id', $this->warehouseId)?->name ?? 'My warehouse' }}</strong>
+                <span class="inv-note">Pinned to your store.</span>
+            @else
+                <select id="inventory-warehouse" class="warehouse" wire:model.live="warehouseId">
+                    @foreach ($warehouses as $warehouse)
+                        <option value="{{ $warehouse->id }}">{{ $warehouse->name }}</option>
+                    @endforeach
+                </select>
+                <span class="inv-note">Stock actions apply to this warehouse only.</span>
+            @endif
         </div>
 
         @if (count($stats))

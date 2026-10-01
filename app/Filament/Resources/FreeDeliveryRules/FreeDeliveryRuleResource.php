@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\FreeDeliveryRules;
 
+use App\Filament\Concerns\HidesFromWarehouseManagers;
 use App\Filament\Resources\FreeDeliveryRules\Pages\ManageFreeDeliveryRules;
 use App\Models\FreeDeliveryRule;
 use BackedEnum;
@@ -21,6 +22,8 @@ use Filament\Tables\Table;
 
 class FreeDeliveryRuleResource extends Resource
 {
+    use HidesFromWarehouseManagers;
+
     protected static ?string $model = FreeDeliveryRule::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;

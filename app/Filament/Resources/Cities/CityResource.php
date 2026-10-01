@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Cities;
 
+use App\Filament\Concerns\HidesFromWarehouseManagers;
 use App\Filament\Resources\Cities\Pages\ManageCities;
 use App\Models\City;
 use App\Models\Product;
@@ -24,6 +25,8 @@ use Illuminate\Support\Str;
 
 class CityResource extends Resource
 {
+    use HidesFromWarehouseManagers;
+
     protected static ?string $model = City::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBuildingStorefront;

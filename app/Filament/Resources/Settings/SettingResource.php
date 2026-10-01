@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Settings;
 
+use App\Filament\Concerns\HidesFromWarehouseManagers;
 use App\Filament\Resources\Settings\Pages\ManageSettings;
 use App\Models\Setting;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
@@ -23,6 +24,8 @@ use Filament\Tables\Table;
 
 class SettingResource extends Resource
 {
+    use HidesFromWarehouseManagers;
+
     protected static ?string $model = Setting::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

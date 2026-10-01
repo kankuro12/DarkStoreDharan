@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Categories;
 
+use App\Filament\Concerns\HidesFromWarehouseManagers;
 use App\Filament\Resources\Categories\Pages\ManageCategories;
 use App\Models\Category;
 use Awcodes\Curator\Components\Forms\CuratorPicker;
@@ -21,6 +22,8 @@ use Filament\Tables\Table;
 
 class CategoryResource extends Resource
 {
+    use HidesFromWarehouseManagers;
+
     protected static ?string $model = Category::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

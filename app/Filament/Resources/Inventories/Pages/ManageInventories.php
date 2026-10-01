@@ -13,6 +13,7 @@ use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\Warehouse;
 use App\Services\Inventory\InventoryService;
+use App\Support\WarehouseScope;
 use Filament\Actions\Action;
 use Filament\Actions\ExportAction;
 use Filament\Actions\ImportAction;
@@ -34,7 +35,10 @@ class ManageInventories extends ManageRecords
     {
         parent::mount();
 
-        $this->warehouseId = auth()->user()?->warehouse_id
+        // A warehouse manager is pinned to their store; everyone else keeps
+        // their own warehouse default or the first active store.
+        $this->warehouseId = WarehouseScope::managedWarehouseId()
+            ?? auth()->user()?->warehouse_id
             ?? Warehouse::query()->where('status', 'active')->value('id');
     }
 
@@ -49,6 +53,13 @@ class ManageInventories extends ManageRecords
 
     public function updatedWarehouseId(): void
     {
+        // Warehouse managers stay pinned; ignore attempts to switch stores.
+        if (WarehouseScope::managedOnly()) {
+            $this->warehouseId = WarehouseScope::managedWarehouseId();
+
+            return;
+        }
+
         $this->resetTable();
     }
 
@@ -56,6 +67,7 @@ class ManageInventories extends ManageRecords
     {
         return view('filament.resources.inventories-header', [
             'warehouses' => Warehouse::query()->where('status', 'active')->orderBy('name')->get(),
+            'locked' => WarehouseScope::managedOnly(),
             'stats' => $this->getStats(),
         ]);
     }

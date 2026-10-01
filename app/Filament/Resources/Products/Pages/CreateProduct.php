@@ -3,9 +3,15 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Filament\Resources\Products\ProductResource;
+use App\Support\WarehouseScope;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateProduct extends CreateRecord
 {
     protected static string $resource = ProductResource::class;
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        return ! WarehouseScope::managedOnly();
+    }
 }

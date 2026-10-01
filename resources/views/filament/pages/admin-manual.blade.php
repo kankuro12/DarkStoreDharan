@@ -47,6 +47,7 @@
             <a href="#audit">15. Audit Logs</a>
             <a href="#routine">16. Daily Routine (Quick List)</a>
             <a href="#rider">17. Rider Panel (Delivery App)</a>
+            <a href="#manager">18. Warehouse Manager Access</a>
         </div>
 
         <h2 id="signing-in">1. Signing In</h2>
@@ -300,6 +301,26 @@
         </ul>
         <div class="note">Assign riders as usual from <strong>Warehouse Floor Operations → Dispatch</strong>; the
             order appears in that rider's list immediately.</div>
+
+        <h2 id="manager">18. Warehouse Manager Access</h2>
+        <p>
+            A staff account with the <strong>warehouse manager</strong> role and an assigned warehouse is a
+            middle-man admin: they log into this same panel (<code>/admin</code>) but only ever see and touch
+            <strong>their own store</strong>.
+        </p>
+        <ul>
+            <li><strong>Visible screens:</strong> Dashboard (stats for their store only), Warehouse Floor Operations
+                (pinned to their store, no switcher), Orders (their store only), Inventory &amp; Stock (locked to
+                their store), Stock Ledger (their store only), Warehouses (their own row), Return Requests (their
+                store's orders) and this Manual.</li>
+            <li><strong>Hidden screens:</strong> Products, Categories, Brands, Cities, Coupons, Free Delivery Matrix,
+                Delivery Agents, Settings and Audit Logs stay super-admin only.</li>
+            <li>Stock actions, transfers and order status changes behave exactly as described above — but always
+                inside their own warehouse.</li>
+        </ul>
+        <div class="note">Creating the account and assigning the store is a super-admin job (run on the server):
+            give the user role <code>warehouse_manager</code> and set their <code>warehouse_id</code>. Without an
+            assigned store, a warehouse manager has no restrictions yet — assign it right away.</div>
 
         <div class="warn">Superadmin housekeeping: the seeded admin account starts with a default password — change
             it, and keep one shared ops login out of customer hands. Backups of the database run from the server;

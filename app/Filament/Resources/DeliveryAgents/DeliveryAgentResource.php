@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\DeliveryAgents;
 
+use App\Filament\Concerns\HidesFromWarehouseManagers;
 use App\Filament\Resources\DeliveryAgents\Pages\ManageDeliveryAgents;
 use App\Models\DeliveryAgent;
 use BackedEnum;
@@ -19,6 +20,8 @@ use Filament\Tables\Table;
 
 class DeliveryAgentResource extends Resource
 {
+    use HidesFromWarehouseManagers;
+
     protected static ?string $model = DeliveryAgent::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

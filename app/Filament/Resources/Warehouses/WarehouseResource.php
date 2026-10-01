@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Warehouses;
 
 use App\Filament\Resources\Warehouses\Pages\ManageWarehouses;
 use App\Models\Warehouse;
+use App\Support\WarehouseScope;
 use BackedEnum;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -16,12 +17,30 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class WarehouseResource extends Resource
 {
     protected static ?string $model = Warehouse::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    /**
+     * A warehouse manager sees only their own store row and cannot create stores.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                WarehouseScope::managedWarehouseId(),
+                fn (Builder $query, int $warehouseId) => $query->whereKey($warehouseId)
+            );
+    }
+
+    public static function canCreate(): bool
+    {
+        return ! WarehouseScope::managedOnly();
+    }
 
     public static function form(Schema $schema): Schema
     {

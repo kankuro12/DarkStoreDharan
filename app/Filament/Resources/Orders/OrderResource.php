@@ -8,6 +8,7 @@ use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
 use App\Models\Order;
 use App\Services\Inventory\StockReservationService;
+use App\Support\WarehouseScope;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -29,12 +30,31 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 
 class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+
+    /**
+     * Warehouse managers only ever see their own warehouse's orders. There are
+     * no staff policies in this app, so the scope and record checks live here.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                WarehouseScope::managedWarehouseId(),
+                fn (Builder $query, int $warehouseId) => $query->where('orders.warehouse_id', $warehouseId)
+            );
+    }
+
+    public static function canView(Model $record): bool
+    {
+        return $record instanceof Order && WarehouseScope::canAccessWarehouse($record->warehouse_id);
+    }
 
     /**
      * The only fields staff should hand-edit after an order exists: everything else
@@ -207,6 +227,7 @@ class OrderResource extends Resource
             ->label('Update Status')
             ->icon(Heroicon::OutlinedArrowPath)
             ->color('primary')
+            ->visible(fn (Order $record) => WarehouseScope::canAccessWarehouse($record->warehouse_id))
             ->form([
                 Select::make('order_status')
                     ->label('New Status')
@@ -249,7 +270,7 @@ class OrderResource extends Resource
             ->icon(Heroicon::OutlinedXCircle)
             ->color('danger')
             ->requiresConfirmation()
-            ->visible(fn (Order $record) => $record->isCancellable())
+            ->visible(fn (Order $record) => WarehouseScope::canAccessWarehouse($record->warehouse_id) && $record->isCancellable())
             ->form([
                 Textarea::make('reason')
                     ->label('Cancellation Reason')

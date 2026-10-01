@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Enums\OrderStatus;
 use App\Models\Inventory;
 use App\Models\Order;
+use App\Support\WarehouseScope;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -12,14 +13,23 @@ class DarkStoreStatsOverview extends StatsOverviewWidget
 {
     protected function getStats(): array
     {
-        $todayOrdersCount = Order::whereDate('placed_at', today())->count();
-        $todayRevenue = Order::whereDate('placed_at', today())
+        $warehouseId = WarehouseScope::managedWarehouseId();
+
+        $orders = Order::query()->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId));
+
+        $todayOrdersCount = (clone $orders)->whereDate('placed_at', today())->count();
+
+        $todayRevenue = (clone $orders)->whereDate('placed_at', today())
             ->whereNotIn('order_status', [OrderStatus::Cancelled])
             ->sum('grand_total');
 
-        $outForDeliveryCount = Order::where('order_status', OrderStatus::Dispatched)->count();
+        $outForDeliveryCount = (clone $orders)->where('order_status', OrderStatus::Dispatched)->count();
 
-        $lowStockCount = Inventory::get()->filter(fn ($inv) => $inv->isLowStock())->count();
+        $lowStockCount = Inventory::query()
+            ->when($warehouseId, fn ($query) => $query->where('warehouse_id', $warehouseId))
+            ->get()
+            ->filter(fn ($inventory) => $inventory->isLowStock())
+            ->count();
 
         return [
             Stat::make("Today's Fast Orders", $todayOrdersCount)

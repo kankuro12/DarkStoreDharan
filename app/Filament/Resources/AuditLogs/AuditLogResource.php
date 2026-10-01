@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\AuditLogs;
 
+use App\Filament\Concerns\HidesFromWarehouseManagers;
 use App\Filament\Resources\AuditLogs\Pages\ManageAuditLogs;
 use App\Models\AuditLog;
 use BackedEnum;
@@ -17,6 +18,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class AuditLogResource extends Resource
 {
+    use HidesFromWarehouseManagers;
+
     protected static ?string $model = AuditLog::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;

@@ -5,6 +5,8 @@ namespace App\Filament\Resources\InventoryMovements;
 use App\Enums\InventoryMovementType;
 use App\Filament\Resources\InventoryMovements\Pages\ListInventoryMovements;
 use App\Models\InventoryMovement;
+use App\Models\Warehouse;
+use App\Support\WarehouseScope;
 use BackedEnum;
 use Filament\Forms\Components\DatePicker;
 use Filament\Resources\Resource;
@@ -97,7 +99,11 @@ class InventoryMovementResource extends Resource
             ->filters([
                 SelectFilter::make('warehouse_id')
                     ->label('Warehouse')
-                    ->relationship('warehouse', 'name'),
+                    ->relationship('warehouse', 'name')
+                    ->options(fn (): array => WarehouseScope::managedOnly()
+                        ? [(string) WarehouseScope::managedWarehouseId() => WarehouseScope::managedWarehouseName()]
+                        : Warehouse::active()->pluck('name', 'id')->toArray()
+                    ),
                 SelectFilter::make('type')
                     ->options(InventoryMovementType::class)
                     ->multiple(),

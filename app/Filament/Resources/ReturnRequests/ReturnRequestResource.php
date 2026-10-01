@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ReturnRequests;
 use App\Filament\Resources\ReturnRequests\Pages\ManageReturnRequests;
 use App\Models\ReturnRequest;
 use App\Services\Returns\ReturnService;
+use App\Support\WarehouseScope;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
@@ -23,6 +24,7 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ReturnRequestResource extends Resource
 {
@@ -31,6 +33,21 @@ class ReturnRequestResource extends Resource
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArrowUturnLeft;
 
     protected static ?string $navigationLabel = 'Return Requests';
+
+    /**
+     * Warehouse managers only see returns for orders fulfilled by their store.
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->when(
+                WarehouseScope::managedWarehouseId(),
+                fn (Builder $query, int $warehouseId) => $query->whereHas(
+                    'order',
+                    fn (Builder $orders) => $orders->where('warehouse_id', $warehouseId)
+                )
+            );
+    }
 
     public static function form(Schema $schema): Schema
     {

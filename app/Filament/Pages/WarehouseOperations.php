@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\DeliveryAgent;
 use App\Models\Order;
 use App\Models\Warehouse;
+use App\Support\WarehouseScope;
 use BackedEnum;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -31,6 +32,13 @@ class WarehouseOperations extends Page
 
     public function mount(): void
     {
+        // Warehouse managers are pinned to their store and never get the switcher.
+        if (WarehouseScope::managedWarehouseId()) {
+            $this->selectedWarehouseId = WarehouseScope::managedWarehouseId();
+
+            return;
+        }
+
         $user = auth()->user();
         if ($user && $user->warehouse_id) {
             $this->selectedWarehouseId = $user->warehouse_id;
@@ -40,6 +48,28 @@ class WarehouseOperations extends Page
         }
     }
 
+    public function lockedWarehouseName(): ?string
+    {
+        return WarehouseScope::managedOnly() ? WarehouseScope::managedWarehouseName() : null;
+    }
+
+    /**
+     * Floor actions may only ever touch the manager's own warehouse — the blade
+     * hides the switcher, and this stops forged Livewire calls reaching through.
+     */
+    private function scopedWarehouseId(): ?int
+    {
+        return WarehouseScope::managedWarehouseId() ?? $this->selectedWarehouseId;
+    }
+
+    private function findScopedOrder(int $orderId): Order
+    {
+        $order = Order::findOrFail($orderId);
+        abort_unless(WarehouseScope::canAccessWarehouse($order->warehouse_id), 403);
+
+        return $order;
+    }
+
     public function getWarehousesProperty()
     {
         return Warehouse::active()->get();
@@ -47,7 +77,7 @@ class WarehouseOperations extends Page
 
     public function getOrdersProperty(): array
     {
-        if (! $this->selectedWarehouseId) {
+        if (! $this->scopedWarehouseId()) {
             return [
                 'new' => collect(),
                 'picking' => collect(),
@@ -58,7 +88,7 @@ class WarehouseOperations extends Page
         }
 
         $baseQuery = Order::with(['items', 'address', 'deliveryAgent'])
-            ->where('warehouse_id', $this->selectedWarehouseId)
+            ->where('warehouse_id', $this->scopedWarehouseId())
             ->latest('placed_at');
 
         return [
@@ -72,11 +102,11 @@ class WarehouseOperations extends Page
 
     public function getAvailableRidersProperty()
     {
-        if (! $this->selectedWarehouseId) {
+        if (! $this->scopedWarehouseId()) {
             return collect();
         }
 
-        $warehouse = Warehouse::find($this->selectedWarehouseId);
+        $warehouse = Warehouse::find($this->scopedWarehouseId());
         $cityId = $warehouse?->cities()->first()?->id;
 
         return DeliveryAgent::where('city_id', $cityId)
@@ -86,7 +116,7 @@ class WarehouseOperations extends Page
 
     public function startPicking(int $orderId): void
     {
-        $order = Order::findOrFail($orderId);
+        $order = $this->findScopedOrder($orderId);
         $order->transitionOrderStatus(OrderStatus::Processing, 'Picker started item collection', auth()->id());
 
         AuditLog::record('warehouse_picking_started', $order, null, ['status' => 'processing'], 'Picker began picking order items');
@@ -99,7 +129,7 @@ class WarehouseOperations extends Page
 
     public function finishPacking(int $orderId): void
     {
-        $order = Order::findOrFail($orderId);
+        $order = $this->findScopedOrder($orderId);
         $order->transitionOrderStatus(OrderStatus::Packed, 'Items picked and verified. Bag sealed.', auth()->id());
 
         AuditLog::record('warehouse_packing_finished', $order, null, ['status' => 'packed'], 'Items packed into bag');
@@ -112,7 +142,7 @@ class WarehouseOperations extends Page
 
     public function markReady(int $orderId): void
     {
-        $order = Order::findOrFail($orderId);
+        $order = $this->findScopedOrder($orderId);
         $order->transitionOrderStatus(OrderStatus::ReadyForDispatch, 'Order staged at dispatch bay', auth()->id());
 
         AuditLog::record('warehouse_order_ready', $order, null, ['status' => 'ready_for_dispatch'], 'Order waiting for rider pickup');
@@ -125,7 +155,7 @@ class WarehouseOperations extends Page
 
     public function dispatchOrder(int $orderId, ?int $riderId = null): void
     {
-        $order = Order::findOrFail($orderId);
+        $order = $this->findScopedOrder($orderId);
 
         if ($riderId) {
             $order->delivery_agent_id = $riderId;

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Coupons;
 
+use App\Filament\Concerns\HidesFromWarehouseManagers;
 use App\Filament\Resources\Coupons\Pages\ManageCoupons;
 use App\Models\Coupon;
 use BackedEnum;
@@ -20,6 +21,8 @@ use Filament\Tables\Table;
 
 class CouponResource extends Resource
 {
+    use HidesFromWarehouseManagers;
+
     protected static ?string $model = Coupon::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;

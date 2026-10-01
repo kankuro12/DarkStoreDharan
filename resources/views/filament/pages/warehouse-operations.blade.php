@@ -176,11 +176,15 @@
         <div class="ops-toolbar">
             <div>
                 <label class="ops-label">Active Dark Store / Micro-Warehouse</label>
-                <select wire:model.live="selectedWarehouseId" class="ops-select">
-                    @foreach($this->warehouses as $wh)
-                        <option value="{{ $wh->id }}">{{ $wh->name }} ({{ $wh->code }})</option>
-                    @endforeach
-                </select>
+                @if ($this->lockedWarehouseName())
+                    <div class="ops-select" style="display:flex;align-items:center;">{{ $this->lockedWarehouseName() }}</div>
+                @else
+                    <select wire:model.live="selectedWarehouseId" class="ops-select">
+                        @foreach($this->warehouses as $wh)
+                            <option value="{{ $wh->id }}">{{ $wh->name }} ({{ $wh->code }})</option>
+                        @endforeach
+                    </select>
+                @endif
             </div>
 
             <div>

@@ -8,6 +8,7 @@ use App\Models\Inventory;
 use App\Models\InventoryMovement;
 use App\Models\Warehouse;
 use App\Services\Inventory\InventoryService;
+use App\Support\WarehouseScope;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Actions\BulkAction;
@@ -23,6 +24,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Model;
 use InvalidArgumentException;
 
 class InventoryResource extends Resource
@@ -32,6 +34,11 @@ class InventoryResource extends Resource
     protected static ?string $navigationLabel = 'Inventory & Stock';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
+
+    public static function canEdit(Model $record): bool
+    {
+        return $record instanceof Inventory && WarehouseScope::canAccessWarehouse($record->warehouse_id);
+    }
 
     /**
      * Only the reorder level is hand-editable. Quantity changes flow through the
@@ -143,6 +150,7 @@ class InventoryResource extends Resource
             ->label('Adjust Stock')
             ->icon(Heroicon::OutlinedArrowsUpDown)
             ->color('warning')
+            ->visible(fn (Inventory $record) => WarehouseScope::canAccessWarehouse($record->warehouse_id))
             ->form([
                 TextInput::make('quantity_delta')
                     ->label('Adjustment Quantity (+ or -)')
@@ -176,7 +184,7 @@ class InventoryResource extends Resource
             ->label('Transfer')
             ->icon(Heroicon::OutlinedArrowsRightLeft)
             ->color('info')
-            ->visible(fn (Inventory $record) => $record->available > 0)
+            ->visible(fn (Inventory $record) => WarehouseScope::canAccessWarehouse($record->warehouse_id) && $record->available > 0)
             ->form([
                 Select::make('to_warehouse_id')
                     ->label('Destination Warehouse')
@@ -223,6 +231,7 @@ class InventoryResource extends Resource
             ->label('Ledger')
             ->icon(Heroicon::OutlinedClipboardDocumentList)
             ->color('gray')
+            ->visible(fn (Inventory $record) => WarehouseScope::canAccessWarehouse($record->warehouse_id))
             ->modalHeading(fn (Inventory $record) => "Ledger — {$record->variant?->sku}")
             ->modalContent(fn (Inventory $record) => view('filament.inventory-ledger-history', [
                 'movements' => InventoryMovement::query()

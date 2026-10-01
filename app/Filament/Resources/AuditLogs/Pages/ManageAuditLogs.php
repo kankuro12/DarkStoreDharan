@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AuditLogs\Pages;
 
 use App\Filament\Resources\AuditLogs\AuditLogResource;
+use App\Support\WarehouseScope;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
 
@@ -15,5 +16,10 @@ class ManageAuditLogs extends ManageRecords
         return [
             CreateAction::make(),
         ];
+    }
+
+    public static function canAccess(array $parameters = []): bool
+    {
+        return ! WarehouseScope::managedOnly();
     }
 }
