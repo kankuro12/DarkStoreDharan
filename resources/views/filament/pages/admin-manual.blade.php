@@ -167,8 +167,10 @@
 
         <h2 id="categories">7. Categories &amp; Brands</h2>
         <ul>
-            <li><strong>Categories</strong> — name, slug, sort order, image and status. They drive the storefront
-                category rails and filters. Keep the sort order tidy (lower numbers first).</li>
+            <li><strong>Categories</strong> — name, slug, sort order, image and status. Set a
+                <strong>parent category</strong> to build a multi-level tree (e.g. Groceries › Rice › Basmati);
+                top-level chips on the storefront open the whole subtree, and products always count toward every
+                ancestor. The table shows the full path, and the system refuses category loops.</li>
             <li><strong>Brands</strong> — name and slug only. Used for filtering and product pages.</li>
         </ul>
 

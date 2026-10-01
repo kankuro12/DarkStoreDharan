@@ -2,6 +2,7 @@
 
 namespace App\Filament\Imports;
 
+use App\Models\Category;
 use App\Models\Product;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
@@ -29,9 +30,9 @@ class ProductImporter extends Importer
                 ->helperText('Leave blank to auto-generate from the name. Matching an existing slug updates that product instead of creating a duplicate.'),
 
             ImportColumn::make('category')
-                ->relationship(resolveUsing: 'name')
+                ->relationship(resolveUsing: fn (string $state): ?\App\Models\Category => Category::findByPath($state))
                 ->example('Snacks & Beverages')
-                ->helperText('Must exactly match an existing category name; leave blank for none.'),
+                ->helperText('Must exactly match an existing category name, or a "Parent > Child" path; leave blank for none.'),
 
             ImportColumn::make('brand')
                 ->relationship(resolveUsing: 'name')

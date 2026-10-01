@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\City;
+use App\Models\Product;
 use App\Services\Catalog\CityCatalogService;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -36,7 +37,32 @@ class HomeController extends Controller
         $selectedCategoryId = $request->query('category_id') ? (int) $request->query('category_id') : null;
         $search = $request->query('q');
 
-        $categories = Category::active()->withCount('products')->orderBy('sort_order')->get();
+        $categories = Category::active()->orderBy('sort_order')->get();
+
+        // Product counts roll up the subtree, so a parent chip shows everything
+        // shelved under it or any of its subcategories.
+        $activeProductCounts = Product::where('status', 'active')
+            ->selectRaw('category_id, count(*) as aggregate')
+            ->groupBy('category_id')
+            ->pluck('aggregate', 'category_id');
+
+        $categories->each(function (Category $category) use ($activeProductCounts): void {
+            $category->products_count = collect($category->descendantIds())
+                ->sum(fn (int $id) => (int) ($activeProductCounts[$id] ?? 0));
+        });
+
+        $topCategories = $categories->whereNull('parent_id')->values();
+        $selectedCategory = $selectedCategoryId ? $categories->firstWhere('id', $selectedCategoryId) : null;
+
+        // Under the selected chip, offer its children — or its siblings when it
+        // has no children of its own — so shoppers can move sideways or deeper.
+        $subCategories = collect();
+        if ($selectedCategory) {
+            $children = $categories->where('parent_id', $selectedCategory->id)->values();
+            $subCategories = $children->isNotEmpty()
+                ? $children
+                : $categories->where('parent_id', $selectedCategory->parent_id)->values();
+        }
 
         if ($currentCity) {
             $featuredProducts = [];
@@ -56,7 +82,7 @@ class HomeController extends Controller
                 if (! empty($featuredProducts)) {
                     $products = $featuredProducts;
                 } else {
-                    $firstCategory = $categories->first();
+                    $firstCategory = $topCategories->first() ?? $categories->first();
                     if ($firstCategory) {
                         $selectedCategoryId = $firstCategory->id;
                         $catalog = $this->catalogService->getProductsForCity(
@@ -89,6 +115,8 @@ class HomeController extends Controller
             'cities' => $allCities,
             'currentCity' => $currentCity,
             'categories' => $categories,
+            'topCategories' => $topCategories,
+            'subCategories' => $subCategories,
             'selectedCategoryId' => $selectedCategoryId,
             'search' => $search,
             'products' => $products,

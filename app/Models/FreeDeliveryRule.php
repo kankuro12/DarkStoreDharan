@@ -69,8 +69,11 @@ class FreeDeliveryRule extends Model
                 return false;
             }
         } elseif ($this->category_id) {
+            // A parent category also covers products in its subcategories.
+            $categoryIds = Category::find($this->category_id)?->descendantIds() ?? [$this->category_id];
+
             $matchedQuantity = collect($cartItems)
-                ->where('category_id', $this->category_id)
+                ->whereIn('category_id', $categoryIds)
                 ->sum('quantity');
 
             if ($matchedQuantity < $requiredQuantity) {

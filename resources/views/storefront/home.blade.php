@@ -156,7 +156,7 @@
                 <span>Featured</span>
             </a>
         @endif
-        @foreach($categories as $category)
+        @foreach($topCategories as $category)
             <a 
                 href="{{ route('storefront.home', array_filter(['category_id' => $category->id, 'city_id' => $currentCity->id, 'q' => request('q')])) }}"
                 class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 {{ $selectedCategoryId == $category->id ? 'bg-slate-950 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}"
@@ -166,6 +166,20 @@
             </a>
         @endforeach
     </div>
+
+    @if($subCategories->isNotEmpty())
+        <div class="flex items-center gap-1.5 overflow-x-auto pb-2 -mt-1 scrollbar-none">
+            @foreach($subCategories as $subCategory)
+                <a
+                    href="{{ route('storefront.home', array_filter(['category_id' => $subCategory->id, 'city_id' => $currentCity->id, 'q' => request('q')])) }}"
+                    class="px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1 {{ $selectedCategoryId == $subCategory->id ? 'bg-amber-500 text-white shadow-xs' : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200' }}"
+                >
+                    <span>{{ $subCategory->name }}</span>
+                    <span class="text-[10px] opacity-75 font-mono">({{ $subCategory->products_count }})</span>
+                </a>
+            @endforeach
+        </div>
+    @endif
 
     <!-- Product Grid Section -->
     <div>

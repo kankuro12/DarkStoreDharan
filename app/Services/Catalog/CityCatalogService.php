@@ -2,6 +2,7 @@
 
 namespace App\Services\Catalog;
 
+use App\Models\Category;
 use App\Models\City;
 use App\Models\Inventory;
 use App\Models\Product;
@@ -42,7 +43,10 @@ class CityCatalogService
             ->where('status', 'active');
 
         if ($categoryId) {
-            $query->where('category_id', $categoryId);
+            // A parent category shows every product shelved under it or any of
+            // its subcategories.
+            $category = Category::find($categoryId);
+            $query->whereIn('category_id', $category ? $category->descendantIds() : [$categoryId]);
         }
 
         if ($productIds !== null) {

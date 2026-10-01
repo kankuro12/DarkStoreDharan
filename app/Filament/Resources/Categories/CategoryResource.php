@@ -33,7 +33,20 @@ class CategoryResource extends Resource
         return $schema
             ->components([
                 Select::make('parent_id')
-                    ->relationship('parent', 'name'),
+                    ->label('Parent Category')
+                    ->relationship('parent', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->options(function (?Category $record): array {
+                        $exclude = $record?->exists ? $record->descendantIds() : [];
+
+                        return Category::query()
+                            ->when($exclude !== [], fn ($query) => $query->whereNotIn('id', $exclude))
+                            ->orderBy('name')
+                            ->pluck('name', 'id')
+                            ->toArray();
+                    })
+                    ->helperText('Leave empty for a top-level category.'),
                 TextInput::make('name')
                     ->required(),
                 TextInput::make('slug')
@@ -53,10 +66,18 @@ class CategoryResource extends Resource
     {
         return $table
             ->columns([
-                TextColumn::make('parent.name')
-                    ->searchable(),
                 TextColumn::make('name')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->formatStateUsing(fn (string $state, Category $record): string => str_repeat('— ', $record->depth).$state),
+                TextColumn::make('path')
+                    ->label('Full Path')
+                    ->toggleable(),
+                TextColumn::make('children_count')
+                    ->counts('children')
+                    ->label('Subcategories')
+                    ->badge()
+                    ->color('info'),
                 TextColumn::make('slug')
                     ->searchable(),
                 ImageColumn::make('image'),
@@ -74,6 +95,7 @@ class CategoryResource extends Resource
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('sort_order')
             ->filters([
                 //
             ])
