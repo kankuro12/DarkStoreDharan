@@ -30,3 +30,5 @@ Homestead.yaml
 Thumbs.db
   
 .playwright-mcp/  
+/deploy/CREDENTIALS.local.md
+
