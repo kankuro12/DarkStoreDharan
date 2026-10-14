@@ -24,7 +24,7 @@ return new class extends Migration
             $table->foreignId('created_by')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamp('created_at')->nullable();
 
-            $table->index(['warehouse_id', 'product_variant_id', 'created_at']);
+            $table->index(['warehouse_id', 'product_variant_id', 'created_at'], 'inv_movements_wh_variant_created_idx');
         });
     }
 
