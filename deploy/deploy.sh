@@ -61,6 +61,19 @@ $app = require_once __DIR__ . '/../app/bootstrap/app.php';
 $app->handleRequest(Request::capture());
 PHP
 
+echo "==> Ensuring HTTPS redirect in docroot .htaccess"
+if ! grep -q 'Force HTTPS' "$PUB_DIR/.htaccess"; then
+    cat >> "$PUB_DIR/.htaccess" <<'HTACCESS'
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Force HTTPS
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</IfModule>
+HTACCESS
+fi
+
 echo "==> Fixing permissions"
 chmod -R 775 "$APP_DIR/storage" "$APP_DIR/bootstrap/cache"
 chmod -R 755 "$PUB_DIR"
