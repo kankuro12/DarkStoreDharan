@@ -62,17 +62,19 @@ return new class extends Migration
      */
     private function repointColumn(string $table, ?array $oldIndex = null, ?array $newIndex = null): void
     {
-        foreach (array_filter([['user_id'], $oldIndex]) as $index) {
-            if (Schema::hasIndex($table, $index)) {
-                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($index));
-            }
-        }
-
+        // Drop the users foreign key first: on MySQL the FK depends on the
+        // user_id index, so the index cannot be dropped while the FK exists.
         $hasUsersForeignKey = collect(Schema::getForeignKeys($table))
             ->contains(fn (array $foreignKey) => $foreignKey['columns'] === ['user_id']);
 
         if ($hasUsersForeignKey) {
             Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropForeign(['user_id']));
+        }
+
+        foreach (array_filter([['user_id'], $oldIndex]) as $index) {
+            if (Schema::hasIndex($table, $index)) {
+                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($index));
+            }
         }
 
         if (! Schema::hasColumn($table, 'customer_id')) {
