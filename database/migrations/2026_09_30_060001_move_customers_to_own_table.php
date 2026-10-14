@@ -71,19 +71,14 @@ return new class extends Migration
             Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropForeign(['user_id']));
         }
 
-        foreach (array_filter([['user_id'], $oldIndex]) as $index) {
-            if (Schema::hasIndex($table, $index)) {
-                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($index));
-            }
-        }
+        $this->dropIndexesByColumns($table, array_filter([['user_id'], $oldIndex]));
 
         if (! Schema::hasColumn($table, 'customer_id')) {
             Schema::table($table, fn (Blueprint $blueprint) => $blueprint->unsignedBigInteger('customer_id')->nullable());
         }
 
-        DB::table($table)->whereNotNull('user_id')->update(['customer_id' => DB::raw('user_id')]);
-
         if (Schema::hasColumn($table, 'user_id')) {
+            DB::table($table)->whereNotNull('user_id')->update(['customer_id' => DB::raw('user_id')]);
             Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropColumn('user_id'));
         }
 
@@ -139,19 +134,14 @@ return new class extends Migration
      */
     private function restoreColumn(string $table, ?array $oldIndex = null, ?array $newIndex = null): void
     {
-        foreach (array_filter([['customer_id'], $oldIndex]) as $index) {
-            if (Schema::hasIndex($table, $index)) {
-                Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($index));
-            }
-        }
+        $this->dropIndexesByColumns($table, array_filter([['customer_id'], $oldIndex]));
 
         if (! Schema::hasColumn($table, 'user_id')) {
             Schema::table($table, fn (Blueprint $blueprint) => $blueprint->unsignedBigInteger('user_id')->nullable());
         }
 
-        DB::table($table)->whereNotNull('customer_id')->update(['user_id' => DB::raw('customer_id')]);
-
         if (Schema::hasColumn($table, 'customer_id')) {
+            DB::table($table)->whereNotNull('customer_id')->update(['user_id' => DB::raw('customer_id')]);
             Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropColumn('customer_id'));
         }
 
@@ -166,6 +156,33 @@ return new class extends Migration
 
         if (! $hasUsersForeignKey) {
             Schema::table($table, fn (Blueprint $blueprint) => $blueprint->foreign('user_id')->references('id')->on('users')->nullOnDelete());
+        }
+    }
+
+    /**
+     * Drop indexes by their column set, resolving the real index name first.
+     *
+     * MySQL names the implicit index it creates for a foreign key after the
+     * constraint (e.g. `return_requests_user_id_foreign`), so guessing the
+     * conventional `{table}_{columns}_index` name fails. Drop by actual name.
+     *
+     * @param  array<int, array<int, string>>  $columnSets
+     */
+    private function dropIndexesByColumns(string $table, array $columnSets): void
+    {
+        $indexes = collect(Schema::getIndexes($table));
+
+        foreach ($columnSets as $columns) {
+            $match = $indexes->first(
+                fn (array $index) => ! $index['primary'] && $index['columns'] === $columns
+            );
+
+            if (! $match) {
+                continue;
+            }
+
+            Schema::table($table, fn (Blueprint $blueprint) => $blueprint->dropIndex($match['name']));
+            $indexes = $indexes->reject(fn (array $index) => $index['name'] === $match['name']);
         }
     }
 };
