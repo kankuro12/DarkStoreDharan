@@ -132,6 +132,8 @@ class RiderPanelTest extends TestCase
             'city_id' => $this->city->id,
             'status' => 'active',
             'availability' => 'available',
+            'verification_status' => 'approved',
+            'training_completed_at' => now(),
         ], $attributes));
     }
 

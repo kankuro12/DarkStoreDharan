@@ -109,8 +109,8 @@ class WarehouseOperations extends Page
         $warehouse = Warehouse::find($this->scopedWarehouseId());
         $cityId = $warehouse?->cities()->first()?->id;
 
-        return DeliveryAgent::where('city_id', $cityId)
-            ->where('status', 'active')
+        return DeliveryAgent::eligibleForDispatch()
+            ->where('city_id', $cityId)
             ->get();
     }
 
@@ -162,7 +162,7 @@ class WarehouseOperations extends Page
             $order->delivery_status = DeliveryStatus::Assigned;
         } else {
             // Pick first available rider for the city
-            $rider = DeliveryAgent::where('status', 'active')->first();
+            $rider = DeliveryAgent::eligibleForDispatch()->where('city_id', $order->city_id)->first();
             if ($rider) {
                 $order->delivery_agent_id = $rider->id;
                 $order->delivery_status = DeliveryStatus::Assigned;

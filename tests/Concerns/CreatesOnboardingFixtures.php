@@ -2,9 +2,14 @@
 
 namespace Tests\Concerns;
 
+use App\Enums\DeliveryStatus;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentMethod;
+use App\Enums\PaymentStatus;
 use App\Enums\UserRole;
 use App\Models\City;
 use App\Models\DeliveryAgent;
+use App\Models\Order;
 use App\Models\User;
 use App\Models\Warehouse;
 use Illuminate\Support\Str;
@@ -57,6 +62,26 @@ trait CreatesOnboardingFixtures
             'availability' => 'available',
             'verification_status' => 'draft',
         ], $attributes));
+    }
+
+    protected function makeOrderFor(?DeliveryAgent $rider, Warehouse $warehouse, DeliveryStatus $deliveryStatus, ?int $cityId = null): Order
+    {
+        return Order::create([
+            'order_number' => 'ORD-'.strtoupper(Str::random(8)),
+            'city_id' => $cityId ?? $rider?->city_id,
+            'warehouse_id' => $warehouse->id,
+            'delivery_agent_id' => $rider?->id,
+            'subtotal' => 255,
+            'discount' => 0,
+            'delivery_fee' => 40,
+            'tax' => 0,
+            'grand_total' => 295,
+            'payment_method' => PaymentMethod::Cod,
+            'order_status' => OrderStatus::ReadyForDispatch,
+            'payment_status' => PaymentStatus::Unpaid,
+            'delivery_status' => $deliveryStatus,
+            'placed_at' => now(),
+        ]);
     }
 
     protected function makeStaff(UserRole $role, array $attributes = []): User

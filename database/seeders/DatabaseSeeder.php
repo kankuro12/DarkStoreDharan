@@ -573,6 +573,9 @@ class DatabaseSeeder extends Seeder
             'availability' => 'available',
             'current_latitude' => 26.8130,
             'current_longitude' => 87.2840,
+            'verification_status' => 'approved',
+            'approved_at' => now(),
+            'training_completed_at' => now(),
         ]);
 
         $rider2 = DeliveryAgent::create([
@@ -583,6 +586,9 @@ class DatabaseSeeder extends Seeder
             'availability' => 'available',
             'current_latitude' => 26.8150,
             'current_longitude' => 87.2800,
+            'verification_status' => 'approved',
+            'approved_at' => now(),
+            'training_completed_at' => now(),
         ]);
 
         // 13. Seed Sample Customer Address

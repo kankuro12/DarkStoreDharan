@@ -87,7 +87,7 @@ class VerificationService
     {
         $this->transition($party, VerificationStatus::Suspended, $actor, $reason, ['rejection_reason' => $reason]);
 
-        return method_exists($party, 'releaseUnstartedDeliveries') ? $party->releaseUnstartedDeliveries() : 0;
+        return $party instanceof DeliveryAgent ? $party->releaseUnstartedDeliveries() : 0;
     }
 
     public function reactivate(Model $party, User $actor): void
