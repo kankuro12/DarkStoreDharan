@@ -3,6 +3,8 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Shared\PhoneOrEmailLogin;
+use App\Filament\Vendor\Pages\Auth\VendorRegister;
+use App\Http\Middleware\EnsureVendorApproved;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,7 +29,10 @@ class VendorPanelProvider extends PanelProvider
             ->id('vendor')
             ->path('vendor')
             ->login(PhoneOrEmailLogin::class)
+            ->registration(VendorRegister::class)
+            ->passwordReset()
             ->authGuard('vendor')
+            ->authPasswordBroker('vendors')
             ->brandName('DarkStore Supplier Portal')
             ->colors([
                 'primary' => Color::Indigo,
@@ -51,6 +56,7 @@ class VendorPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                EnsureVendorApproved::class,
             ]);
     }
 }

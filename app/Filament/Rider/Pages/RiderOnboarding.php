@@ -11,7 +11,6 @@ use App\Models\DeliveryAgent;
 use App\Models\Warehouse;
 use BackedEnum;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Radio;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Section;
@@ -99,29 +98,7 @@ class RiderOnboarding extends KycOnboardingPage
             Step::make('Identity')->schema([
                 KycFormSchemas::documentSection(KycDocumentType::ProfilePhoto, $dir, true, $this->documentLocked(KycDocumentType::ProfilePhoto),
                     description: 'A clear, recent selfie with your face fully visible.'),
-                Radio::make('identity_document')
-                    ->label('Identity document')
-                    ->options([
-                        KycDocumentType::Citizenship->value => KycDocumentType::Citizenship->label(),
-                        KycDocumentType::NationalId->value => KycDocumentType::NationalId->label(),
-                    ])
-                    ->formatStateUsing(fn (?string $state) => $state ?? ($this->rider()->kycDocuments->contains('type', KycDocumentType::NationalId)
-                        ? KycDocumentType::NationalId->value : KycDocumentType::Citizenship->value))
-                    ->required()
-                    ->live()
-                    ->dehydrated(false),
-                KycFormSchemas::documentSection(KycDocumentType::Citizenship, $dir, true, $this->documentLocked(KycDocumentType::Citizenship), [
-                    Select::make('docs.citizenship.issuing_authority')
-                        ->label('Issuing district')
-                        ->options(fn () => collect(config('nepal.districts'))->flatten()->sort()->mapWithKeys(fn ($d) => [$d => $d]))
-                        ->searchable()
-                        ->required()
-                        ->disabled($this->documentLocked(KycDocumentType::Citizenship)),
-                    DatePicker::make('docs.citizenship.issued_on')->label('Issue date (AD)')->beforeOrEqual('today')
-                        ->disabled($this->documentLocked(KycDocumentType::Citizenship)),
-                ])->visible(fn (Get $get) => $get('identity_document') === KycDocumentType::Citizenship->value),
-                KycFormSchemas::documentSection(KycDocumentType::NationalId, $dir, true, $this->documentLocked(KycDocumentType::NationalId))
-                    ->visible(fn (Get $get) => $get('identity_document') === KycDocumentType::NationalId->value),
+                ...$this->identityDocumentFields('Identity document'),
                 KycFormSchemas::documentSection(KycDocumentType::PoliceClearance, $dir, false, $this->documentLocked(KycDocumentType::PoliceClearance), [
                     DatePicker::make('docs.police_clearance.issued_on')->label('Issue date (AD)')->beforeOrEqual('today')
                         ->disabled($this->documentLocked(KycDocumentType::PoliceClearance)),

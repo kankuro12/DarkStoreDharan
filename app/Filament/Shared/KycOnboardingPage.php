@@ -9,9 +9,13 @@ use App\Exceptions\VerificationException;
 use App\Models\KycDocument;
 use App\Services\Verification\VerificationService;
 use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Radio;
+use Filament\Forms\Components\Select;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Text;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Schemas\Schema;
@@ -43,6 +47,12 @@ abstract class KycOnboardingPage extends Page
     abstract protected function agreementText(): string;
 
     abstract protected function statusPageUrl(): string;
+
+    /** Hook to adjust validated state before saving (e.g. copy a business number onto its document). */
+    protected function prepareState(array $state): array
+    {
+        return $state;
+    }
 
     /** Document detail fields stored in `meta` rather than columns. */
     protected function metaFields(): array
@@ -122,6 +132,37 @@ abstract class KycOnboardingPage extends Page
         };
     }
 
+    /** Citizenship OR National ID, chosen by a radio; only the chosen one is validated and saved. */
+    protected function identityDocumentFields(string $label): array
+    {
+        $dir = $this->documentDirectory();
+        $citizenship = KycDocumentType::Citizenship;
+        $nid = KycDocumentType::NationalId;
+
+        return [
+            Radio::make('identity_document')
+                ->label($label)
+                ->options([$citizenship->value => $citizenship->label(), $nid->value => $nid->label()])
+                ->formatStateUsing(fn (?string $state) => $state
+                    ?? ($this->party()->kycDocuments->contains('type', $nid) ? $nid->value : $citizenship->value))
+                ->required()
+                ->live()
+                ->dehydrated(false),
+            KycFormSchemas::documentSection($citizenship, $dir, true, $this->documentLocked($citizenship), [
+                Select::make('docs.citizenship.issuing_authority')
+                    ->label('Issuing district')
+                    ->options(fn () => collect(config('nepal.districts'))->flatten()->sort()->mapWithKeys(fn ($d) => [$d => $d]))
+                    ->searchable()
+                    ->required()
+                    ->disabled($this->documentLocked($citizenship)),
+                DatePicker::make('docs.citizenship.issued_on')->label('Issue date (AD)')->beforeOrEqual('today')
+                    ->disabled($this->documentLocked($citizenship)),
+            ])->visible(fn (Get $get) => $get('identity_document') === $citizenship->value),
+            KycFormSchemas::documentSection($nid, $dir, true, $this->documentLocked($nid))
+                ->visible(fn (Get $get) => $get('identity_document') === $nid->value),
+        ];
+    }
+
     protected function documentDirectory(): \Closure
     {
         return fn () => 'kyc/'.$this->party()->getMorphClass().'/'.$this->party()->getKey();
@@ -135,7 +176,7 @@ abstract class KycOnboardingPage extends Page
             return false;
         }
 
-        $state = $this->form->getState();
+        $state = $this->prepareState($this->form->getState());
         $party = $this->party();
 
         if ($party->verification_status === VerificationStatus::Draft) {

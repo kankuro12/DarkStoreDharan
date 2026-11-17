@@ -118,6 +118,7 @@ class KycFormSchemas
         Closure $disabled,
         array $extra = [],
         ?string $description = null,
+        bool $askNumber = true, // false when the number is captured once elsewhere (e.g. vendor PAN)
     ): Section {
         $key = "docs.{$type->value}";
 
@@ -129,7 +130,7 @@ class KycFormSchemas
             $fields[] = self::upload("{$key}.file_back", 'Back side', $directory, $required, $disabled);
         }
 
-        if ($type->needsNumber()) {
+        if ($askNumber && $type->needsNumber()) {
             $number = TextInput::make("{$key}.document_number")
                 ->label($type === KycDocumentType::NationalId ? 'National ID number (NIN, 10 digits)' : 'Document number')
                 ->maxLength(40)
