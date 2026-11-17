@@ -22,7 +22,8 @@ Route::get('/share/product/{slug}', [ShareController::class, 'product'])->name('
 Route::view('/contact', 'storefront.contact')->name('storefront.contact');
 
 // Authentication & Social Login
-Route::middleware('guest:customer')->group(function () {
+// throttle: caps password guessing, OTP brute force and SMS/email spam per IP on every POST here.
+Route::middleware(['guest:customer', 'throttle:10,1'])->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login']);
     Route::get('/register', [AuthController::class, 'showRegister'])->name('register');

@@ -23,6 +23,17 @@ class PaymentCallbackController extends Controller
      */
     public function handleCallback(Request $request): JsonResponse
     {
+        // Only our trusted gateway integration knows the secret; reject anything unsigned so the
+        // public can't mark orders paid. Fails closed when the secret isn't configured.
+        $secret = (string) config('services.payments.callback_secret');
+        $expected = hash_hmac('sha256', $request->getContent(), $secret);
+
+        if ($secret === '' || ! hash_equals($expected, (string) $request->header('X-Signature'))) {
+            Log::warning('Rejected payment callback with missing or invalid signature', ['ip' => $request->ip()]);
+
+            return response()->json(['success' => false, 'message' => 'Invalid signature.'], 401);
+        }
+
         $validated = $request->validate([
             'order_number' => 'required|string|exists:orders,order_number',
             'transaction_id' => 'required|string|max:100',

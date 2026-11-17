@@ -54,6 +54,7 @@ class AuthController extends Controller
         ]);
 
         Auth::guard('customer')->login($customer);
+        $request->session()->regenerate();
 
         return redirect('/');
     }
@@ -109,6 +110,7 @@ class AuthController extends Controller
         }
 
         Auth::guard('customer')->login($customer, true);
+        request()->session()->regenerate();
 
         return redirect('/');
     }

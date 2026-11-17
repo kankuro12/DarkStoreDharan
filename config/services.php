@@ -52,6 +52,15 @@ return [
     |
     */
 
+    /*
+    | Payment callback: POST /api/payments/callback must carry
+    | X-Signature = hex HMAC-SHA256 of the raw request body with this secret.
+    | Left empty, every callback is rejected.
+    */
+    'payments' => [
+        'callback_secret' => env('PAYMENT_CALLBACK_SECRET'),
+    ],
+
     'sms' => [
         'driver' => env('SMS_DRIVER', 'log'),
 

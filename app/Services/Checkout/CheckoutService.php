@@ -64,7 +64,14 @@ class CheckoutService
         // 1. Resolve or create delivery address
         $address = null;
         if (! empty($data['address_id'])) {
-            $address = Address::findOrFail($data['address_id']);
+            // Saved addresses belong to a customer; never let one order use someone else's.
+            $address = $customer
+                ? Address::where('customer_id', $customer->id)->find($data['address_id'])
+                : null;
+
+            if (! $address) {
+                throw new CartValidationException('The selected delivery address is not available.');
+            }
         } elseif (! empty($data['address'])) {
             $addrData = $data['address'];
             $address = Address::create([

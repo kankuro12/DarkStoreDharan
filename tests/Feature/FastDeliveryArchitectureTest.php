@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Exceptions\CartValidationException;
 use App\Exceptions\OutOfStockException;
 use App\Jobs\ReleaseExpiredReservations;
 use App\Models\Brand;
@@ -390,14 +391,23 @@ class FastDeliveryArchitectureTest extends TestCase
         $this->assertEquals(OrderStatus::Pending, $order->order_status);
         $this->assertEquals(PaymentStatus::Pending, $order->payment_status);
 
-        // Server-side gateway callback comes in
-        $response = $this->postJson('/api/payments/callback', [
+        config(['services.payments.callback_secret' => 'test-secret']);
+        $payload = [
             'order_number' => $order->order_number,
             'transaction_id' => 'ESEWA-TXN-998877',
             'status' => 'SUCCESS',
             'amount' => $order->grand_total,
             'gateway' => 'esewa',
-        ]);
+        ];
+
+        // Forged callbacks (unsigned or wrongly signed) must not mark the order paid
+        $this->postJson('/api/payments/callback', $payload)->assertStatus(401);
+        $this->postJson('/api/payments/callback', $payload, ['X-Signature' => 'forged'])->assertStatus(401);
+        $this->assertEquals(PaymentStatus::Pending, $order->refresh()->payment_status);
+
+        // Server-side gateway callback comes in, signed with the shared secret
+        $signature = hash_hmac('sha256', json_encode($payload), 'test-secret');
+        $response = $this->postJson('/api/payments/callback', $payload, ['X-Signature' => $signature]);
 
         $response->assertStatus(200);
         $response->assertJson([
@@ -409,6 +419,29 @@ class FastDeliveryArchitectureTest extends TestCase
         $order->refresh();
         $this->assertEquals(OrderStatus::Confirmed, $order->order_status);
         $this->assertEquals(PaymentStatus::Paid, $order->payment_status);
+    }
+
+    public function test_public_order_api_cannot_be_enumerated_by_id_and_saved_addresses_are_owner_only(): void
+    {
+        $order = app(CheckoutService::class)->placeOrder([
+            'city_id' => $this->dharan->id,
+            'items' => [['variant_id' => $this->cokeVariant->id, 'quantity' => 1]],
+            'payment_method' => 'cod',
+            'address' => ['full_name' => 'Victim', 'phone' => '9800000003', 'area' => 'Bhanuchowk', 'street' => 'Main Road'],
+        ]);
+
+        $this->getJson("/api/orders/{$order->id}")->assertNotFound();
+        $this->postJson("/api/orders/{$order->id}/cancel")->assertNotFound();
+        $this->getJson("/api/orders/{$order->order_number}")->assertOk()->assertJsonPath('order.order_number', $order->order_number);
+
+        // Another (guest) order may not reuse the victim's address by id
+        $this->expectException(CartValidationException::class);
+        app(CheckoutService::class)->placeOrder([
+            'city_id' => $this->dharan->id,
+            'items' => [['variant_id' => $this->cokeVariant->id, 'quantity' => 1]],
+            'payment_method' => 'cod',
+            'address_id' => $order->address_id,
+        ]);
     }
 
     /**

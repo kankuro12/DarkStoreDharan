@@ -90,7 +90,7 @@ class CartWebController extends Controller
             }
 
             return redirect()->route('storefront.home', ['city_id' => $validated['city_id']])
-                ->with('cart_warning', implode('<br>', $warnings))
+                ->with('cart_warning', implode('<br>', array_map('e', $warnings)))
                 ->with('info', $result['message']);
         }
 
