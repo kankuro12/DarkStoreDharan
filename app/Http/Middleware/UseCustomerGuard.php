@@ -20,7 +20,7 @@ class UseCustomerGuard
 {
     public function handle(Request $request, Closure $next): Response
     {
-        if (! $request->hasHeader('X-Livewire') && ! $request->is('admin*') && ! $request->is('rider*')) {
+        if (! $request->hasHeader('X-Livewire') && ! $request->is('admin*', 'rider*', 'vendor*')) {
             Auth::shouldUse('customer');
         }
 

@@ -64,6 +64,23 @@ class KycDocumentAccessTest extends TestCase
             ->assertOk();
     }
 
+    public function test_catalog_manager_can_view_vendor_doc_but_not_rider_doc(): void
+    {
+        Storage::disk('local')->put('kyc/vendor/1/pan.jpg', 'pan-bytes');
+        $vendorDoc = $this->makeVendor()->upsertKycDocument(KycDocumentType::PanCertificate, ['file_front' => 'kyc/vendor/1/pan.jpg']);
+        $catalogManager = $this->makeStaff(UserRole::CatalogManager);
+
+        $this->actingAs($catalogManager, 'web')
+            ->get(route('admin.kyc.file', ['document' => $vendorDoc, 'side' => 'front']))
+            ->assertOk();
+        $this->actingAs($catalogManager, 'web')->get($this->url())->assertForbidden();
+
+        $this->flushSession();
+        $this->actingAs($this->makeStaff(UserRole::DeliveryCoordinator), 'web')
+            ->get(route('admin.kyc.file', ['document' => $vendorDoc, 'side' => 'front']))
+            ->assertForbidden();
+    }
+
     public function test_super_admin_download_streams_file_and_is_audited(): void
     {
         $admin = $this->makeStaff(UserRole::SuperAdmin);

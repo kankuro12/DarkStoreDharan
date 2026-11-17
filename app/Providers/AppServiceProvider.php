@@ -8,6 +8,7 @@ use App\Models\DeliveryAgent;
 use App\Models\KycDocument;
 use App\Models\Setting;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Services\Cart\CartService;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Cache;
@@ -34,6 +35,7 @@ class AppServiceProvider extends ServiceProvider
         // Stable morph aliases for KYC documents / location requests (not enforced: legacy morphs keep class names).
         Relation::morphMap([
             'delivery_agent' => DeliveryAgent::class,
+            'vendor' => Vendor::class,
         ]);
 
         // Separate admin abilities per party (staff `web` guard only).
