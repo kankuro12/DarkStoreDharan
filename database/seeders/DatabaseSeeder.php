@@ -671,5 +671,7 @@ class DatabaseSeeder extends Seeder
             'Initial sample order seeded',
             $admin->id
         );
+
+        $this->call(OnboardingDemoSeeder::class);
     }
 }
