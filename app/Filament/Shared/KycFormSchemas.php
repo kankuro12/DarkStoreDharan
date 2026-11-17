@@ -24,7 +24,7 @@ class KycFormSchemas
     public const NIN_PATTERN = '/^\d{10}$/';
 
     /** Nepal address: province → district (dependent) → municipality → ward → tole. */
-    public static function addressFields(string $prefix, bool $required, Closure $disabled): array
+    public static function addressFields(string $prefix, bool|Closure $required, Closure $disabled): array
     {
         return [
             Select::make("{$prefix}_province")
@@ -70,37 +70,40 @@ class KycFormSchemas
     {
         $isBank = fn (Get $get) => self::enumValue($get('payout_method')) === PayoutMethod::Bank->value;
         $isWallet = fn (Get $get) => self::enumValue($get('payout_method')) === PayoutMethod::Wallet->value;
+        // Locked fields can't be fixed by the applicant, so they never block a resubmission.
+        $bankRequired = fn (Get $get) => $isBank($get) && ! $disabled();
+        $walletRequired = fn (Get $get) => $isWallet($get) && ! $disabled();
 
         return [
             Select::make('payout_method')
                 ->label('How should we pay you?')
                 ->options(PayoutMethod::class)
-                ->required()
+                ->required(fn () => ! $disabled())
                 ->live()
                 ->disabled($disabled),
             Select::make('bank_name')
                 ->options(array_combine(config('nepal.banks'), config('nepal.banks')))
                 ->searchable()
                 ->visible($isBank)
-                ->required($isBank)
+                ->required($bankRequired)
                 ->disabled($disabled),
             TextInput::make('bank_account_name')
                 ->label('Account holder name (must match your legal name)')
                 ->maxLength(150)
                 ->visible($isBank)
-                ->required($isBank)
+                ->required($bankRequired)
                 ->disabled($disabled),
             TextInput::make('bank_account_number')
                 ->label('Account number')
                 ->regex('/^[0-9A-Za-z\-]{6,30}$/')
                 ->visible($isBank)
-                ->required($isBank)
+                ->required($bankRequired)
                 ->disabled($disabled),
             TextInput::make('wallet_id')
                 ->label('eSewa / Khalti ID (mobile number)')
                 ->regex(PhoneOtpFields::NEPALI_MOBILE)
                 ->visible($isWallet)
-                ->required($isWallet)
+                ->required($walletRequired)
                 ->disabled($disabled),
         ];
     }
@@ -121,6 +124,8 @@ class KycFormSchemas
         bool $askNumber = true, // false when the number is captured once elsewhere (e.g. vendor PAN)
     ): Section {
         $key = "docs.{$type->value}";
+        // An already-approved (locked) document is never re-required during a resubmission.
+        $required = fn (Get $get) => ! $disabled() && ($required instanceof Closure ? $required($get) : $required);
 
         $fields = [
             self::upload("{$key}.file_front", $type->needsBack() ? 'Front side' : 'Upload', $directory, $required, $disabled),

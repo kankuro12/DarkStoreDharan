@@ -98,25 +98,26 @@ class VendorOnboarding extends KycOnboardingPage
     protected function steps(): array
     {
         $locked = $this->profileLocked();
+        $required = $this->requiredWhileEditable();
         $dir = $this->documentDirectory();
         $registrationDoc = fn (Get $get) => BusinessType::tryFrom((string) ($get('business_type') instanceof BusinessType ? $get('business_type')->value : $get('business_type')))
             ?->registrationDocument();
 
         return [
             Step::make('Business')->schema([
-                TextInput::make('legal_name')->label('Registered business name')->required()->maxLength(200)->disabled($locked),
+                TextInput::make('legal_name')->label('Registered business name')->required($required)->maxLength(200)->disabled($locked),
                 TextInput::make('trade_name')->label('Trade / brand name (internal only)')->maxLength(200)->disabled($locked),
-                Select::make('business_type')->options(BusinessType::class)->required()->live()->disabled($locked),
-                TextInput::make('registration_number')->label('Registration number')->required()->maxLength(60)->disabled($locked),
+                Select::make('business_type')->options(BusinessType::class)->required($required)->live()->disabled($locked),
+                TextInput::make('registration_number')->label('Registration number')->required($required)->maxLength(60)->disabled($locked),
                 TextInput::make('registration_authority')
                     ->label('Registered at')
                     ->placeholder('Office of the Company Registrar / Department of Commerce / Cottage & Small Industries office')
-                    ->required()
+                    ->required($required)
                     ->maxLength(150)
                     ->disabled($locked),
                 TextInput::make('pan_number')
                     ->label('PAN (9 digits)')
-                    ->required()
+                    ->required($required)
                     ->regex('/^\d{9}$/')
                     ->unique(Vendor::class, 'pan_number', ignorable: fn () => $this->vendor())
                     ->disabled($locked),
@@ -143,17 +144,17 @@ class VendorOnboarding extends KycOnboardingPage
             ]),
 
             Step::make('Authorized person')->schema([
-                TextInput::make('authorized_person_name')->label('Full name (as on citizenship)')->required()->maxLength(150)->disabled($locked),
-                TextInput::make('authorized_person_designation')->label('Designation')->required()->maxLength(80)->disabled($locked),
+                TextInput::make('authorized_person_name')->label('Full name (as on citizenship)')->required($required)->maxLength(150)->disabled($locked),
+                TextInput::make('authorized_person_designation')->label('Designation')->required($required)->maxLength(80)->disabled($locked),
                 ...$this->identityDocumentFields('Identity document of the authorized person'),
             ]),
 
             Step::make('Pickup location')->schema([
                 Section::make('Pickup address (fixed; changes need approval)')
-                    ->schema(KycFormSchemas::addressFields('pickup', true, $locked))
+                    ->schema(KycFormSchemas::addressFields('pickup', $required, $locked))
                     ->columns(2),
-                TextInput::make('pickup_latitude')->numeric()->minValue(26.3)->maxValue(30.5)->required()->disabled($locked),
-                TextInput::make('pickup_longitude')->numeric()->minValue(80.0)->maxValue(88.3)->required()->disabled($locked),
+                TextInput::make('pickup_latitude')->numeric()->minValue(26.3)->maxValue(30.5)->required($required)->disabled($locked),
+                TextInput::make('pickup_longitude')->numeric()->minValue(80.0)->maxValue(88.3)->required($required)->disabled($locked),
             ])->columns(2),
 
             Step::make('Payout')->schema([

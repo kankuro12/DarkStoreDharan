@@ -74,24 +74,25 @@ class RiderOnboarding extends KycOnboardingPage
     protected function steps(): array
     {
         $locked = $this->profileLocked();
+        $required = $this->requiredWhileEditable();
         $dir = $this->documentDirectory();
 
         return [
             Step::make('Personal details')->schema([
-                TextInput::make('name')->label('Full name (as on citizenship)')->required()->maxLength(150)->disabled($locked),
+                TextInput::make('name')->label('Full name (as on citizenship)')->required($required)->maxLength(150)->disabled($locked),
                 DatePicker::make('date_of_birth')
                     ->label('Date of birth (AD)')
-                    ->required()
+                    ->required($required)
                     ->beforeOrEqual(now()->subYears(18)->toDateString())
                     ->validationMessages(['before_or_equal' => 'Riders must be at least 18 years old.'])
                     ->disabled($locked),
-                Select::make('gender')->options(['male' => 'Male', 'female' => 'Female', 'other' => 'Other'])->required()->disabled($locked),
-                Section::make('Permanent address')->schema(KycFormSchemas::addressFields('perm', true, $locked))->columns(2),
+                Select::make('gender')->options(['male' => 'Male', 'female' => 'Female', 'other' => 'Other'])->required($required)->disabled($locked),
+                Section::make('Permanent address')->schema(KycFormSchemas::addressFields('perm', $required, $locked))->columns(2),
                 Section::make('Temporary address (if different)')->schema(KycFormSchemas::addressFields('temp', false, $locked))->columns(2)->collapsed(),
                 Section::make('Emergency contact')->schema([
-                    TextInput::make('emergency_contact_name')->label('Name')->required()->maxLength(150)->disabled($locked),
-                    TextInput::make('emergency_contact_relation')->label('Relation')->required()->maxLength(50)->disabled($locked),
-                    TextInput::make('emergency_contact_phone')->label('Mobile')->required()->regex(PhoneOtpFields::NEPALI_MOBILE)->disabled($locked),
+                    TextInput::make('emergency_contact_name')->label('Name')->required($required)->maxLength(150)->disabled($locked),
+                    TextInput::make('emergency_contact_relation')->label('Relation')->required($required)->maxLength(50)->disabled($locked),
+                    TextInput::make('emergency_contact_phone')->label('Mobile')->required($required)->regex(PhoneOtpFields::NEPALI_MOBILE)->disabled($locked),
                 ])->columns(3),
             ]),
 
@@ -112,13 +113,13 @@ class RiderOnboarding extends KycOnboardingPage
                         Select::make('docs.driving_license.license_category')
                             ->label('License category')
                             ->options(fn () => collect($this->rider()->vehicle_type?->acceptedLicenseCategories() ?? [])->mapWithKeys(fn ($c) => [$c => $c]))
-                            ->required()
+                            ->required($this->documentRequired(KycDocumentType::DrivingLicense))
                             ->disabled($this->documentLocked(KycDocumentType::DrivingLicense)),
                     ]),
                     KycFormSchemas::documentSection(KycDocumentType::VehicleBluebook, $dir, true, $this->documentLocked(KycDocumentType::VehicleBluebook), [
                         TextInput::make('docs.vehicle_bluebook.vehicle_registration_number')
                             ->label('Vehicle registration number (e.g. KO 1 PA 1234)')
-                            ->required()
+                            ->required($this->documentRequired(KycDocumentType::VehicleBluebook))
                             ->maxLength(30)
                             ->dehydrateStateUsing(fn (?string $state) => strtoupper(trim((string) $state)))
                             ->disabled($this->documentLocked(KycDocumentType::VehicleBluebook)),
@@ -126,7 +127,7 @@ class RiderOnboarding extends KycOnboardingPage
                     KycFormSchemas::documentSection(KycDocumentType::VehicleInsurance, $dir, true, $this->documentLocked(KycDocumentType::VehicleInsurance), [
                         TextInput::make('docs.vehicle_insurance.issuing_authority')
                             ->label('Insurance company')
-                            ->required()
+                            ->required($this->documentRequired(KycDocumentType::VehicleInsurance))
                             ->maxLength(100)
                             ->disabled($this->documentLocked(KycDocumentType::VehicleInsurance)),
                     ], 'Third-party insurance is mandatory in Nepal.'),
@@ -138,10 +139,10 @@ class RiderOnboarding extends KycOnboardingPage
                     ->options(fn () => Warehouse::where('status', 'active')
                         ->whereHas('cities', fn ($q) => $q->whereKey($this->rider()->city_id))
                         ->pluck('name', 'id'))
-                    ->required()
+                    ->required($required)
                     ->disabled($locked),
-                TextInput::make('base_latitude')->label('Base latitude')->numeric()->minValue(26.3)->maxValue(30.5)->required()->disabled($locked),
-                TextInput::make('base_longitude')->label('Base longitude')->numeric()->minValue(80.0)->maxValue(88.3)->required()->disabled($locked),
+                TextInput::make('base_latitude')->label('Base latitude')->numeric()->minValue(26.3)->maxValue(30.5)->required($required)->disabled($locked),
+                TextInput::make('base_longitude')->label('Base longitude')->numeric()->minValue(80.0)->maxValue(88.3)->required($required)->disabled($locked),
                 ...KycFormSchemas::payoutFields($locked),
                 KycFormSchemas::documentSection(KycDocumentType::BankProof, $dir, true, $this->documentLocked(KycDocumentType::BankProof))
                     ->visible(fn (Get $get) => in_array($get('payout_method'), [PayoutMethod::Bank, PayoutMethod::Bank->value], true)),

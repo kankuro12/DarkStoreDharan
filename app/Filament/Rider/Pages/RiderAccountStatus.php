@@ -2,6 +2,7 @@
 
 namespace App\Filament\Rider\Pages;
 
+use App\Filament\Shared\ReuploadExpiredAction;
 use App\Models\DeliveryAgent;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -16,6 +17,11 @@ class RiderAccountStatus extends Page
     protected static ?string $slug = 'account-status';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;
+
+    protected function getHeaderActions(): array
+    {
+        return [ReuploadExpiredAction::make(fn () => auth('delivery')->user(), fn () => RiderOnboarding::getUrl())];
+    }
 
     protected function getViewData(): array
     {

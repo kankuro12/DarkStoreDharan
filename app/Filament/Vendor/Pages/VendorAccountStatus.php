@@ -2,6 +2,7 @@
 
 namespace App\Filament\Vendor\Pages;
 
+use App\Filament\Shared\ReuploadExpiredAction;
 use App\Models\Vendor;
 use BackedEnum;
 use Filament\Pages\Page;
@@ -16,6 +17,11 @@ class VendorAccountStatus extends Page
     protected static ?string $slug = 'account-status';
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShieldCheck;
+
+    protected function getHeaderActions(): array
+    {
+        return [ReuploadExpiredAction::make(fn () => auth('vendor')->user(), fn () => VendorOnboarding::getUrl())];
+    }
 
     protected function getViewData(): array
     {

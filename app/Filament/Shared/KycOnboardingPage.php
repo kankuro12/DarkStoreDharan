@@ -114,10 +114,22 @@ abstract class KycOnboardingPage extends Page
         return fn () => $this->party()->verification_status !== VerificationStatus::Draft;
     }
 
+    /** Closure for ->required() on profile fields: an applicant can't fix a locked field, so never block on it. */
+    protected function requiredWhileEditable(): \Closure
+    {
+        return fn () => $this->party()->verification_status === VerificationStatus::Draft;
+    }
+
     /** Closure for ->disabled() on one document's fields. */
     protected function documentLocked(KycDocumentType $type): \Closure
     {
         return fn () => ! $this->documentEditable($type);
+    }
+
+    /** Closure for ->required() on a document's extra detail fields (only while that document is editable). */
+    protected function documentRequired(KycDocumentType $type): \Closure
+    {
+        return fn () => $this->documentEditable($type);
     }
 
     protected function documentEditable(KycDocumentType $type): bool
@@ -153,7 +165,7 @@ abstract class KycOnboardingPage extends Page
                     ->label('Issuing district')
                     ->options(fn () => collect(config('nepal.districts'))->flatten()->sort()->mapWithKeys(fn ($d) => [$d => $d]))
                     ->searchable()
-                    ->required()
+                    ->required($this->documentRequired($citizenship))
                     ->disabled($this->documentLocked($citizenship)),
                 DatePicker::make('docs.citizenship.issued_on')->label('Issue date (AD)')->beforeOrEqual('today')
                     ->disabled($this->documentLocked($citizenship)),
