@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Filament\Rider\Pages\RiderAccountStatus;
 use App\Filament\Rider\Pages\RiderOnboarding;
+use Illuminate\Http\Request;
 
 class EnsureRiderApproved extends EnsureKycApproved
 {
@@ -25,5 +26,10 @@ class EnsureRiderApproved extends EnsureKycApproved
     protected function statusUrl(): string
     {
         return RiderAccountStatus::getUrl();
+    }
+
+    protected function allowsWhileUnapproved(Request $request, mixed $party): bool
+    {
+        return $request->routeIs('filament.rider.pages.my-deliveries') && $party->hasInFlightDeliveries();
     }
 }

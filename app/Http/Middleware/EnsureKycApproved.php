@@ -17,6 +17,12 @@ abstract class EnsureKycApproved
 
     abstract protected function statusUrl(): string;
 
+    /** Extra routes an unapproved party may still use (e.g. a suspended rider finishing deliveries). */
+    protected function allowsWhileUnapproved(Request $request, mixed $party): bool
+    {
+        return false;
+    }
+
     public function handle(Request $request, Closure $next): Response
     {
         $party = auth($this->guard())->user();
@@ -25,6 +31,7 @@ abstract class EnsureKycApproved
         if ($party
             && ! $party->isApproved()
             && ! $request->hasHeader('X-Livewire')
+            && ! $this->allowsWhileUnapproved($request, $party)
             && ! $request->routeIs("filament.{$panel}.pages.onboarding", "filament.{$panel}.pages.account-status", "filament.{$panel}.auth.*")) {
             return redirect($party->verification_status->isEditable() ? $this->onboardingUrl() : $this->statusUrl());
         }

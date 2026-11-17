@@ -175,6 +175,9 @@ class KycFormSchemas
             ->disk('local')
             ->visibility('private')
             ->directory($directory)
+            // A tampered Livewire payload can't point at another party's (or any non-KYC) file; the party's own
+            // stored files live under its directory, so those stay valid when the wizard is re-opened.
+            ->preventFilePathTampering(allowFilePathUsing: fn (string $file) => str_starts_with($file, rtrim($directory(), '/').'/'))
             ->acceptedFileTypes(self::FILE_TYPES)
             ->maxSize(self::MAX_UPLOAD_KB)
             ->required($required)

@@ -6,6 +6,7 @@ use App\Enums\DeliveryStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Models\DeliveryAgent;
 use App\Models\Order;
 use BackedEnum;
 use Filament\Notifications\Notification;
@@ -25,7 +26,10 @@ class MyDeliveries extends Page
 
     public static function canAccess(): bool
     {
-        return (bool) auth('delivery')->user()?->isApproved();
+        $rider = auth('delivery')->user();
+
+        // Suspended riders keep access only to finish orders already in their hands.
+        return (bool) ($rider?->isApproved() || $rider?->hasInFlightDeliveries());
     }
 
     /**
@@ -37,6 +41,7 @@ class MyDeliveries extends Page
             ->with(['items', 'address', 'city'])
             ->where('delivery_agent_id', auth('delivery')->id())
             ->whereNotIn('delivery_status', [DeliveryStatus::Delivered, DeliveryStatus::Returned])
+            ->when(! auth('delivery')->user()->isApproved(), fn ($query) => $query->whereIn('delivery_status', DeliveryAgent::IN_FLIGHT_STATUSES))
             ->where('order_status', '!=', OrderStatus::Cancelled->value)
             ->orderByDesc('dispatched_at')
             ->get();
@@ -135,6 +140,7 @@ class MyDeliveries extends Page
         return Order::query()
             ->whereKey($orderId)
             ->where('delivery_agent_id', auth('delivery')->id())
+            ->when(! auth('delivery')->user()->isApproved(), fn ($query) => $query->whereIn('delivery_status', DeliveryAgent::IN_FLIGHT_STATUSES))
             ->first();
     }
 }

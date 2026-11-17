@@ -16,6 +16,15 @@
             <p class="mt-3 text-sm text-danger-600">Note from our team: {{ $party->rejection_reason }}</p>
         @endif
 
+        @if ($party->isApproved() && $party->renewableDocuments()->isNotEmpty())
+            <div class="mt-4">
+                <p class="mb-2 text-sm text-warning-600">
+                    {{ $party->renewableDocuments()->map(fn ($d) => $d->type->label())->implode(', ') }} expiring soon.
+                </p>
+                <x-filament::button tag="a" :href="$onboardingUrl" color="warning">Renew documents</x-filament::button>
+            </div>
+        @endif
+
         @if ($party->verification_status->isEditable())
             <div class="mt-4">
                 <x-filament::button tag="a" :href="$onboardingUrl">Continue verification</x-filament::button>

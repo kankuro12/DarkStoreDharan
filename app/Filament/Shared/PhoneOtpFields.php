@@ -9,12 +9,15 @@ use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Utilities\Get;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 
 /** Phone + one-time-code fields for rider / vendor self-registration. */
 class PhoneOtpFields
 {
     public const NEPALI_MOBILE = '/^9[678]\d{8}$/';
+
+    public const SENDS_PER_IP_PER_MINUTE = 5;
 
     /**
      * @param  class-string  $model  model whose `phone` column must stay unique
@@ -49,6 +52,15 @@ class PhoneOtpFields
 
                                 return;
                             }
+
+                            // OtpService throttles per phone; also cap per IP so one client can't text many numbers.
+                            $ipKey = 'otp-send-ip:'.request()->ip();
+                            if (RateLimiter::tooManyAttempts($ipKey, self::SENDS_PER_IP_PER_MINUTE)) {
+                                Notification::make()->title('Too many codes requested. Try again in a minute.')->danger()->send();
+
+                                return;
+                            }
+                            RateLimiter::hit($ipKey, 60);
 
                             $result = app(OtpService::class)->issue($phone, $otpPurpose);
                             Notification::make()->title($result['message'])->{$result['success'] ? 'success' : 'warning'}()->send();

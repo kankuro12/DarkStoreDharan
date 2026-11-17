@@ -142,6 +142,14 @@ class DeliveryAgent extends Authenticatable implements FilamentUser
         return $query->eligibleForDispatch()->where('availability', 'available');
     }
 
+    public const IN_FLIGHT_STATUSES = [DeliveryStatus::PickedUp, DeliveryStatus::OutForDelivery];
+
+    /** Orders already in the rider's hands: they must be able to finish these even if suspended. */
+    public function hasInFlightDeliveries(): bool
+    {
+        return $this->orders()->whereIn('delivery_status', array_map(fn ($s) => $s->value, self::IN_FLIGHT_STATUSES))->exists();
+    }
+
     /** Hand back orders the rider has not picked up yet; picked-up orders stay with them. */
     public function releaseUnstartedDeliveries(): int
     {

@@ -140,16 +140,17 @@ return [
             'throttle' => 60,
         ],
 
+        // Separate token tables per guard: a shared email-keyed table would let one party's token reset another's account.
         'delivery_agents' => [
             'provider' => 'delivery_agents',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'table' => 'rider_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],
 
         'vendors' => [
             'provider' => 'vendors',
-            'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'table' => 'vendor_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

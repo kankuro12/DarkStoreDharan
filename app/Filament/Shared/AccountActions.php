@@ -25,6 +25,11 @@ class AccountActions
             $record = $party();
             $before = $record->status;
             $record->update(['status' => $status]);
+
+            // A rider who can't log in can't collect orders: hand unstarted ones back to dispatch.
+            if ($status === 'inactive' && method_exists($record, 'releaseUnstartedDeliveries')) {
+                $record->releaseUnstartedDeliveries();
+            }
             $verb = $status === 'inactive' ? 'blocked' : 'allowed';
             AuditLog::record("{$prefix}_login_{$verb}", $record, ['status' => $before], ['status' => $status]);
             Notification::make()->title("Login {$verb}")->success()->send();
@@ -44,6 +49,8 @@ class AccountActions
                 ->action(fn () => $setLogin('active')),
             Action::make('sendPasswordReset')
                 ->label('Text password reset link')
+                // The reset page identifies the account by email; without one, set a new password via Edit.
+                ->visible(fn () => filled($party()->email))
                 ->requiresConfirmation()
                 ->action(function () use ($party, $prefix, $broker, $panelId) {
                     $record = $party();

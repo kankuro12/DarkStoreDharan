@@ -92,8 +92,8 @@ abstract class KycOnboardingPage extends Page
                             Text::make($this->agreementText()),
                             Checkbox::make('agreement')
                                 ->label('I have read and agree to the terms above')
-                                ->accepted()
-                                ->required()
+                                ->accepted(fn () => $this->isEditable())
+                                ->required(fn () => $this->isEditable())
                                 ->dehydrated(false)
                                 ->disabled(fn () => ! $this->isEditable()),
                         ]),
@@ -138,6 +138,8 @@ abstract class KycOnboardingPage extends Page
 
         return match ($party->verification_status) {
             VerificationStatus::Draft => true,
+            // Approved parties may renew a document shortly before it expires, without losing approval.
+            VerificationStatus::Approved => $party->renewableDocuments()->contains('type', $type),
             VerificationStatus::NeedsChanges => ! ($doc = $party->kycDocuments->firstWhere('type', $type))
                 || in_array($doc->status, [KycDocumentStatus::Rejected, KycDocumentStatus::Expired], true),
             default => false,
@@ -182,7 +184,7 @@ abstract class KycOnboardingPage extends Page
 
     public function save(): bool
     {
-        if (! $this->isEditable()) {
+        if (! $this->isEditable() && $this->party()->renewableDocuments()->isEmpty()) {
             Notification::make()->title('Your application is locked while it is being reviewed.')->warning()->send();
 
             return false;
@@ -228,6 +230,13 @@ abstract class KycOnboardingPage extends Page
     public function submit(): void
     {
         if (! $this->save()) {
+            return;
+        }
+
+        if ($this->party()->isApproved()) {
+            Notification::make()->title('Renewed document sent for review. Your account stays active.')->success()->send();
+            $this->redirect($this->statusPageUrl());
+
             return;
         }
 

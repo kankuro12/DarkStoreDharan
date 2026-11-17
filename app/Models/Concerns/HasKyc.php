@@ -8,6 +8,7 @@ use App\Models\AuditLog;
 use App\Models\KycDocument;
 use App\Models\LocationChangeRequest;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Support\Collection;
 
 /**
  * Shared KYC behaviour for parties that self-onboard (riders, vendors).
@@ -65,6 +66,16 @@ trait HasKyc
                 array_map(fn ($t) => $t->value, $present),
             ) === [],
         ));
+    }
+
+    /** Approved documents expiring within the renewal window: the party may upload a replacement early. */
+    public function renewableDocuments(int $withinDays = 30): Collection
+    {
+        return $this->kycDocuments
+            ->filter(fn (KycDocument $doc) => $doc->status === KycDocumentStatus::Approved
+                && $doc->expires_on
+                && $doc->expires_on->lte(today()->addDays($withinDays)))
+            ->values();
     }
 
     /** Create or replace the party's document of this type; a replacement goes back to pending review. */

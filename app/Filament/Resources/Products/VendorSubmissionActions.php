@@ -36,6 +36,21 @@ class VendorSubmissionActions
                         return;
                     }
 
+                    // The base price is the storefront fallback in any city without its own price row; it starts at
+                    // the vendor's cost, so it must be raised above cost before going live.
+                    $atCost = $record->variants()->where('status', 'active')
+                        ->whereColumn('price', '<=', 'supply_price')
+                        ->pluck('name');
+
+                    if ($atCost->isNotEmpty()) {
+                        Notification::make()
+                            ->title('Raise the base price above the vendor cost for: '.$atCost->implode(', '))
+                            ->danger()
+                            ->send();
+
+                        return;
+                    }
+
                     $record->update(['status' => 'active']);
                     AuditLog::record('vendor_product_approved', $record, ['status' => 'pending_review'], ['status' => 'active']);
                     self::notifyVendor($record, "DarkStore: your product \"{$record->name}\" is now live.");
