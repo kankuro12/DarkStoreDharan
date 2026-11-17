@@ -2,7 +2,9 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Rider\Pages\Auth\RiderRegister;
 use App\Filament\Rider\Pages\MyDeliveries;
+use App\Filament\Shared\PhoneOrEmailLogin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -24,8 +26,11 @@ class RiderPanelProvider extends PanelProvider
         return $panel
             ->id('rider')
             ->path('rider')
-            ->login()
+            ->login(PhoneOrEmailLogin::class)
+            ->registration(RiderRegister::class)
+            ->passwordReset()
             ->authGuard('delivery')
+            ->authPasswordBroker('delivery_agents')
             ->brandName('DarkStore Rider')
             ->colors([
                 'primary' => Color::Emerald,
