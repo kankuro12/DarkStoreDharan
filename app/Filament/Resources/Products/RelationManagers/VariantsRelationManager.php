@@ -15,6 +15,7 @@ use Filament\Support\Enums\FontWeight;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class VariantsRelationManager extends RelationManager
@@ -84,6 +85,11 @@ class VariantsRelationManager extends RelationManager
                 TextColumn::make('price')
                     ->money('NPR')
                     ->sortable(),
+                TextColumn::make('supply_price')
+                    ->label('Vendor cost')
+                    ->money('NPR')
+                    ->placeholder('—')
+                    ->visible(fn () => Gate::allows('manage-vendors')),
                 TextColumn::make('inventories_sum_quantity')
                     ->label('Total Stock')
                     ->sum('inventories', 'quantity')

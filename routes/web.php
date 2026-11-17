@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\UserRole;
+use App\Http\Controllers\Admin\KycDocumentFileController;
 use App\Http\Controllers\Storefront\AccountController;
 use App\Http\Controllers\Storefront\AuthController;
 use App\Http\Controllers\Storefront\CartWebController;
@@ -80,6 +81,12 @@ Route::post('/checkout', [CheckoutWebController::class, 'process'])->name('store
 Route::get('/orders/{orderNumber}/tracking', [OrderTrackingWebController::class, 'show'])->name('storefront.order.tracking');
 Route::post('/orders/{orderNumber}/return', [OrderTrackingWebController::class, 'requestReturn'])->name('storefront.order.return');
 Route::post('/orders/{orderNumber}/cancel', [OrderTrackingWebController::class, 'cancel'])->name('storefront.order.cancel');
+
+// Private KYC document files (admin staff only, gated per party type, audited)
+Route::get('/admin/kyc-documents/{document}/{side}', KycDocumentFileController::class)
+    ->whereIn('side', ['front', 'back'])
+    ->middleware(['auth:web', 'can:view-kyc-documents,document'])
+    ->name('admin.kyc.file');
 
 // Legal & Compliance Pages
 Route::view('/privacy-policy', 'storefront.privacy')->name('storefront.privacy');

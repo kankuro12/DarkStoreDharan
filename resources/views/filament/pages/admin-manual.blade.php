@@ -48,6 +48,12 @@
             <a href="#routine">16. Daily Routine (Quick List)</a>
             <a href="#rider">17. Rider Panel (Delivery App)</a>
             <a href="#manager">18. Warehouse Manager Access</a>
+            <a href="#rider-onboarding">19. Rider onboarding</a>
+            <a href="#vendor-onboarding">20. Vendor onboarding</a>
+            <a href="#kyc-checklist">21. KYC document checklist</a>
+            <a href="#location-requests">22. Location change requests</a>
+            <a href="#vendor-payouts">23. Vendor payouts</a>
+            <a href="#expiry">24. Expiry suspensions</a>
         </div>
 
         <h2 id="signing-in">1. Signing In</h2>
@@ -226,8 +232,9 @@
 
         <h2 id="delivery">10. Delivery Agents</h2>
         <p>
-            Your rider roster: name, phone, city, status and current availability. Only <strong>active</strong> riders
-            are offered when dispatching from the floor board.
+            Your rider roster (menu: <strong>Riders</strong>). Only riders who are <strong>approved</strong>,
+            <strong>trained</strong> and allowed to log in are offered when dispatching from the floor board.
+            Riders now sign up themselves — see <a href="#rider-onboarding">Rider onboarding</a>.
         </p>
 
         <h2 id="free-delivery">11. Free Delivery Matrix</h2>
@@ -323,6 +330,86 @@
         <div class="note">Creating the account and assigning the store is a super-admin job (run on the server):
             give the user role <code>warehouse_manager</code> and set their <code>warehouse_id</code>. Without an
             assigned store, a warehouse manager has no restrictions yet — assign it right away.</div>
+
+        <h2 id="rider-onboarding">19. Rider onboarding</h2>
+        <p>
+            Riders register at <code>/rider/register</code> with their mobile number (verified by SMS code), choose
+            their city and vehicle, then complete a 5-step verification: personal details &amp; address, identity,
+            vehicle documents (skipped for bicycles), home hub &amp; payout, and the agreement. Until approved they
+            only see their verification and status pages.
+        </p>
+        <ul>
+            <li><strong>Who reviews:</strong> super admins and delivery coordinators (menu: Riders → <em>Pending review</em> tab).</li>
+            <li><strong>Steps:</strong> open the rider → <em>Start review</em> → approve or reject each document in the
+                <em>KYC documents</em> table (click Front/Back to view; <em>Reveal</em> shows the number and is logged)
+                → <em>Approve</em>. If something is wrong, reject that document with a reason and use
+                <em>Request changes</em>; the rider re-uploads only the rejected documents.</li>
+            <li><strong>Before the first order:</strong> after the onboarding session, press <em>Mark training complete</em>.
+                Approved but untrained riders are never dispatched.</li>
+            <li><strong>Control:</strong> <em>Suspend</em> (releases orders not yet picked up back to dispatch),
+                <em>Reactivate</em>, <em>Account → Block login</em>, <em>Text password reset link</em>, and Edit for any field
+                including hub and base location. Every action is audited.</li>
+        </ul>
+
+        <h2 id="vendor-onboarding">20. Vendor onboarding</h2>
+        <p>
+            Vendors are consignment suppliers: DarkStore holds the stock and sells under its own name, so
+            <strong>customers never see vendor names</strong>. Vendors register at <code>/vendor/register</code> (PAN,
+            business type, verified mobile) and complete: business details, business documents, authorized person,
+            pickup location, payout, agreement.
+        </p>
+        <ul>
+            <li><strong>Who reviews:</strong> super admins and catalog managers (menu: Vendors). Same review steps as riders.
+                You can also <em>Add vendor</em> for walk-in suppliers and <em>Upload document</em> on their behalf.</li>
+            <li><strong>Products:</strong> approved vendors submit products and their supply price (cost). Submissions
+                appear under Products with status <em>Pending review (vendor)</em>. Add photos, set a city selling price
+                for every pack, then <em>Approve</em> (blocked until prices exist) or <em>Request changes</em>.</li>
+            <li><strong>Suspending a vendor</strong> takes all their live products off the storefront; reactivating
+                restores exactly those products.</li>
+        </ul>
+
+        <h2 id="kyc-checklist">21. KYC document checklist</h2>
+        <table>
+            <tr><th>Document</th><th>Who</th><th>Required when</th><th>Check</th></tr>
+            <tr><td>Selfie</td><td>Rider</td><td>Always</td><td>Face clear, matches ID photo</td></tr>
+            <tr><td>Citizenship (Nagarikta) or National ID</td><td>Rider / vendor's authorized person</td><td>Always (either one)</td><td>Name matches; front and back; NID is 10 digits</td></tr>
+            <tr><td>Driving license</td><td>Rider</td><td>Scooter / motorcycle</td><td>Category A (or K for scooter); not expired</td></tr>
+            <tr><td>Bluebook (Billbook)</td><td>Rider</td><td>Scooter / motorcycle</td><td>Registration number; tax renewal valid</td></tr>
+            <tr><td>Third-party insurance</td><td>Rider</td><td>Scooter / motorcycle</td><td>Policy valid; vehicle matches bluebook</td></tr>
+            <tr><td>Police clearance</td><td>Rider</td><td>Optional</td><td>Recent issue date</td></tr>
+            <tr><td>PAN certificate (IRD)</td><td>Vendor</td><td>Always</td><td>9-digit PAN matches the form</td></tr>
+            <tr><td>Company (OCR) or firm registration</td><td>Vendor</td><td>Always (by business type)</td><td>Name and number match</td></tr>
+            <tr><td>VAT certificate</td><td>Vendor</td><td>VAT registered</td><td>VAT number = PAN</td></tr>
+            <tr><td>Food license (DFTQC)</td><td>Vendor</td><td>Supplies food</td><td>Not expired</td></tr>
+            <tr><td>Tax clearance</td><td>Vendor</td><td>Optional</td><td>Fiscal year (e.g. 2082/83)</td></tr>
+            <tr><td>Bank proof (cheque / letter)</td><td>Vendor; rider paid by bank</td><td>See left</td><td>Account holder name matches legal name</td></tr>
+        </table>
+
+        <h2 id="location-requests">22. Location change requests</h2>
+        <p>
+            Riders (city, hub, base point) and vendors (pickup address) have a fixed location. They request a change
+            from their panel; review it under <strong>Location requests</strong>, comparing current and proposed, then
+            approve (applied immediately) or reject with a reason (texted to them). You can also edit a location
+            directly from the rider or vendor record.
+        </p>
+
+        <h2 id="vendor-payouts">23. Vendor payouts</h2>
+        <p>
+            Vendors are owed <em>quantity × supply price</em> for every unit in orders <strong>delivered</strong> in a
+            period (the price is frozen at checkout). They see their statement under <em>Sales &amp; settlement</em>.
+            Finance (and super admins) record each payment under <strong>Vendor payouts</strong>: vendor, period,
+            amount, reference. A payout above the period's balance is refused, and payouts cannot be edited — record a
+            correcting entry instead.
+        </p>
+
+        <h2 id="expiry">24. Expiry suspensions</h2>
+        <p>
+            Every morning the system texts reminders 30 and 7 days before a license, bluebook, insurance, food license
+            or tax clearance expires. When a <strong>required</strong> document expires the rider or vendor is
+            suspended automatically (riders' unstarted orders go back to dispatch). They can upload the renewed
+            document themselves from their status page; review and approve it as usual. Suspensions you make by hand
+            can only be lifted by an admin.
+        </p>
 
         <div class="warn">Superadmin housekeeping: the seeded admin account starts with a default password — change
             it, and keep one shared ops login out of customer hands. Backups of the database run from the server;

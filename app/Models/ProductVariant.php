@@ -20,12 +20,17 @@ class ProductVariant extends Model
         'weight_kg',
         'cod_allowed',
         'status',
+        'supply_price',
     ];
+
+    // Vendor cost price is internal; never serialize it to customers.
+    protected $hidden = ['supply_price'];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
+            'supply_price' => 'decimal:2',
             'weight_kg' => 'decimal:3',
             'cod_allowed' => 'boolean',
         ];

@@ -25,19 +25,21 @@ npm run dev                   # Vite HMR
 php84 artisan test            # all tests
 php84 artisan admin:manage    # TUI to create/manage admin users
 php84 artisan sitemap:generate
+php84 artisan kyc:check-expiry  # KYC reminders / expiry / auto-suspend (scheduled daily)
 ```
 Local-only shortcut: `GET /local-admin-login?redirect=/admin` logs in the first super admin (only when `APP_ENV=local`).
 
-Seeded logins (password `password`): `admin@darkstore.np` (super admin), `dharan.manager@darkstore.np` (warehouse manager), `picker@darkstore.np`, customer `customer@darkstore.np`.
+Seeded logins (password `password`): `admin@darkstore.np` (super admin), `dharan.manager@darkstore.np` (warehouse manager), `picker@darkstore.np`, customer `customer@darkstore.np`. Onboarding demo (`OnboardingDemoSeeder`): `rider.{draft|submitted|needs_changes|approved}@darkstore.np` at `/rider` and `vendor.{…}@darkstore.np` at `/vendor`.
 
 ## Three auth guards (important)
 | Guard | Table / Model | Used by | URL |
 |---|---|---|---|
 | `web` | `users` / `User` (staff, `role` = `UserRole`) | Admin Filament panel | `/admin` |
 | `customer` | `customers` / `Customer` | Storefront | `/login`, `/account/*` |
-| `delivery` | `delivery_agents` / `DeliveryAgent` | Rider Filament panel | `/rider` |
+| `delivery` | `delivery_agents` / `DeliveryAgent` | Rider Filament panel | `/rider` (self-signup `/rider/register`) |
+| `vendor` | `vendors` / `Vendor` | Supplier Filament panel | `/vendor` (self-signup `/vendor/register`) |
 
-`app/Http/Middleware/UseCustomerGuard.php` switches web routes to `customer` unless path is `admin*`/`rider*` or it's a Livewire request. Customers were split out of `users` by migration `2026_09_30_060001_move_customers_to_own_table.php`.
+`app/Http/Middleware/UseCustomerGuard.php` switches web routes to `customer` unless path is `admin*`/`rider*`/`vendor*` or it's a Livewire request. Each guard has its own password broker (`customers`, `delivery_agents`, `vendors`). Riders and vendors log in with phone **or** email (`App\Filament\Shared\PhoneOrEmailLogin`). Customers were split out of `users` by migration `2026_09_30_060001_move_customers_to_own_table.php`.
 
 Customer login options: email/password, Google, phone + OTP (`OtpService`, unified sign-in/up), password reset by email or phone OTP.
 
@@ -45,6 +47,18 @@ Customer login options: email/password, Google, phone + OTP (`OtpService`, unifi
 `UserRole`: super_admin, catalog_manager, warehouse_manager, picker_packer, delivery_coordinator, finance, support (+ legacy `customer`).
 - `App\Support\WarehouseScope` — a warehouse_manager with `warehouse_id` sees **only** their warehouse. Everyone else is unrestricted (returns null).
 - `App\Filament\Concerns\HidesFromWarehouseManagers` — trait hiding global config resources (catalog, cities, coupons, settings…) from warehouse managers.
+- Admin permission **Gates** (`AppServiceProvider::boot`): `manage-riders` (super_admin, delivery_coordinator), `manage-vendors` (super_admin, catalog_manager), `view-kyc-documents` (by document owner type), `manage-vendor-payouts` (super_admin, finance).
+
+## Rider & vendor onboarding (KYC)
+Plan + decisions: [docs/superpowers/plans/2026-11-17-rider-vendor-onboarding.md](docs/superpowers/plans/2026-11-17-rider-vendor-onboarding.md).
+- **State machine** `VerificationStatus`: draft → submitted → under_review → approved | needs_changes | rejected; approved ↔ suspended. All transitions go through `Services/Verification/VerificationService` (validates, audits, texts the party). Unapproved parties are confined to their wizard/status pages by `EnsureRiderApproved` / `EnsureVendorApproved` (both extend `EnsureKycApproved`).
+- **Shared KYC tables:** `kyc_documents` (polymorphic, morph aliases `delivery_agent` / `vendor`, numbers encrypted) and `location_change_requests`. Trait `Models/Concerns/HasKyc`: `requiredDocumentGroups()` (each group satisfied by any one type), `missingDocumentGroups()`, `upsertKycDocument()`, `locationAttributes()`.
+- **Files** live on the private `local` disk under `kyc/{alias}/{id}/`; staff view them only through `GET /admin/kyc-documents/{document}/{side}` (gated + audited).
+- **Wizards** share `Filament/Shared/KycOnboardingPage` (edit rules: Draft = all editable; NeedsChanges = only rejected/expired/missing documents; else read-only). Form builders in `Filament/Shared/KycFormSchemas` (Nepal provinces/districts/banks from `config/nepal.php`).
+- **Admin**: Riders and Vendors resources (tabs by status, view page with `VerificationActions`, `AccountActions`, `KycDocumentsRelationManager`), Location requests, Vendor payouts. Admin edits go through `AuditedUpdate` (field-level audit, secrets masked).
+- **Dispatch eligibility**: `DeliveryAgent::eligibleForDispatch()` = active login + approved + `training_completed_at`.
+- **Vendors = consignment**: `products.vendor_id`, `product_variants.supply_price` (both `$hidden`), vendor products start `pending_review`; staff approve only after setting city prices. `order_items.vendor_id` + `unit_supply_price` are snapshotted at checkout; `Services/Vendor/VendorSettlementService::statement()` = delivered qty × snapshot price − payouts. Customers never see vendor data (tested).
+- **Expiry**: `php artisan kyc:check-expiry` (daily 06:00) reminds at 30/7 days, marks documents expired, auto-suspends parties missing a required document (they can re-upload from their status page).
 
 ## Domain model (app/Models)
 - **Geography:** `City` (has homepage config) ↔ `Warehouse` (pivot `warehouse_city`), `DeliveryZone`.
@@ -107,4 +121,7 @@ Then on server: `bash ~/domains/darkstorenepal.com/app/deploy/deploy.sh` (git re
 - **Payment callback has no gateway signature check** (only amount + order match). Add real eSewa/Khalti/Fonepay verification before trusting it in production.
 - Google OAuth config falls back to `mock-client-id` if env is missing.
 - Spec section refs like `§21`, `§38.2` in code comments point to [work.md](work.md).
+- **Filament closures inject by parameter name**: a Builder argument must be named `$query` (e.g. in `Tab::modifyQueryUsing`). `fn (Builder $q)` gets an empty container Builder and crashes with "newQueryWithoutRelationships() on null".
+- **Filament fills edit forms from `attributesToArray()`**, which drops `$hidden` attributes. Saving would null them; use `AuditedUpdate::withHiddenFields` (or `mutateRelationshipDataBeforeFillUsing` for repeaters).
+- **Filament validates disabled fields**: make `required` conditional on editability when fields can be locked (see `requiredWhileEditable()`).
 - Root clutter (`browser_*.png`, `capture_screenshots.cjs`, `test_cart.cjs`, `seed_city.php`) are ad-hoc dev scripts/screenshots, not part of the app.

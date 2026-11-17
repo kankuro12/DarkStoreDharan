@@ -10,3 +10,4 @@ Artisan::command('inspire', function () {
 
 Schedule::job(new ReleaseExpiredReservations)->everyFiveMinutes();
 Schedule::command('sitemap:generate')->daily();
+Schedule::command('kyc:check-expiry')->dailyAt('06:00');

@@ -3,6 +3,7 @@
 use App\Models\Customer;
 use App\Models\DeliveryAgent;
 use App\Models\User;
+use App\Models\Vendor;
 
 return [
 
@@ -54,6 +55,11 @@ return [
             'driver' => 'session',
             'provider' => 'delivery_agents',
         ],
+
+        'vendor' => [
+            'driver' => 'session',
+            'provider' => 'vendors',
+        ],
     ],
 
     /*
@@ -87,6 +93,11 @@ return [
         'delivery_agents' => [
             'driver' => 'eloquent',
             'model' => DeliveryAgent::class,
+        ],
+
+        'vendors' => [
+            'driver' => 'eloquent',
+            'model' => Vendor::class,
         ],
 
         // 'users' => [
@@ -125,6 +136,21 @@ return [
         'customers' => [
             'provider' => 'customers',
             'table' => env('AUTH_PASSWORD_RESET_TOKEN_TABLE', 'password_reset_tokens'),
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        // Separate token tables per guard: a shared email-keyed table would let one party's token reset another's account.
+        'delivery_agents' => [
+            'provider' => 'delivery_agents',
+            'table' => 'rider_password_reset_tokens',
+            'expire' => 60,
+            'throttle' => 60,
+        ],
+
+        'vendors' => [
+            'provider' => 'vendors',
+            'table' => 'vendor_password_reset_tokens',
             'expire' => 60,
             'throttle' => 60,
         ],

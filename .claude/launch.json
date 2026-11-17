@@ -6,6 +6,12 @@
       "runtimeExecutable": "php84",
       "runtimeArgs": ["artisan", "serve"],
       "port": 8000
+    },
+    {
+      "name": "screen-test",
+      "runtimeExecutable": "php84",
+      "runtimeArgs": ["-S", "127.0.0.1:8001", "-t", "public", ".claude/screen-test-server.php"],
+      "port": 8001
     }
   ]
 }

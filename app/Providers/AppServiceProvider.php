@@ -2,10 +2,17 @@
 
 namespace App\Providers;
 
+use App\Enums\UserRole;
 use App\Models\City;
+use App\Models\DeliveryAgent;
+use App\Models\KycDocument;
 use App\Models\Setting;
+use App\Models\User;
+use App\Models\Vendor;
 use App\Services\Cart\CartService;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
@@ -25,6 +32,20 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Stable morph aliases for KYC documents / location requests (not enforced: legacy morphs keep class names).
+        Relation::morphMap([
+            'delivery_agent' => DeliveryAgent::class,
+            'vendor' => Vendor::class,
+        ]);
+
+        // Separate admin abilities per party (staff `web` guard only).
+        Gate::define('manage-riders', fn (User $user) => in_array($user->role, [UserRole::SuperAdmin, UserRole::DeliveryCoordinator], true));
+        Gate::define('manage-vendors', fn (User $user) => in_array($user->role, [UserRole::SuperAdmin, UserRole::CatalogManager], true));
+        Gate::define('manage-vendor-payouts', fn (User $user) => in_array($user->role, [UserRole::SuperAdmin, UserRole::Finance], true));
+        Gate::define('view-kyc-documents', fn (User $user, KycDocument $document) => Gate::forUser($user)->allows(
+            $document->documentable_type === 'vendor' ? 'manage-vendors' : 'manage-riders'
+        ));
+
         View::composer(['layouts.storefront', 'storefront.*'], function ($view) {
             $cartService = app(CartService::class);
             $allCities = City::active()->get();

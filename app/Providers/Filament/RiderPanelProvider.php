@@ -2,7 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Rider\Pages\Auth\RiderRegister;
 use App\Filament\Rider\Pages\MyDeliveries;
+use App\Filament\Rider\Pages\RequestLocationChange;
+use App\Filament\Rider\Pages\RiderAccountStatus;
+use App\Filament\Rider\Pages\RiderOnboarding;
+use App\Filament\Shared\PhoneOrEmailLogin;
+use App\Http\Middleware\EnsureRiderApproved;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -24,16 +30,22 @@ class RiderPanelProvider extends PanelProvider
         return $panel
             ->id('rider')
             ->path('rider')
-            ->login()
+            ->login(PhoneOrEmailLogin::class)
+            ->registration(RiderRegister::class)
+            ->passwordReset()
             ->authGuard('delivery')
+            ->authPasswordBroker('delivery_agents')
             ->brandName('DarkStore Rider')
             ->colors([
                 'primary' => Color::Emerald,
             ])
             ->pages([
                 MyDeliveries::class,
+                RiderOnboarding::class,
+                RiderAccountStatus::class,
+                RequestLocationChange::class,
             ])
-            ->homeUrl(fn (): string => MyDeliveries::getUrl())
+            ->homeUrl(fn (): string => auth('delivery')->user()?->isApproved() ? MyDeliveries::getUrl() : RiderAccountStatus::getUrl())
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -47,6 +59,7 @@ class RiderPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+                EnsureRiderApproved::class,
             ]);
     }
 }

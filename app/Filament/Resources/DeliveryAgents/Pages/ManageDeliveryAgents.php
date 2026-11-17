@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\DeliveryAgents\Pages;
 
 use App\Filament\Resources\DeliveryAgents\DeliveryAgentResource;
+use App\Filament\Shared\VerificationTabs;
 use App\Support\WarehouseScope;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ManageRecords;
@@ -18,8 +19,13 @@ class ManageDeliveryAgents extends ManageRecords
         ];
     }
 
+    public function getTabs(): array
+    {
+        return VerificationTabs::make();
+    }
+
     public static function canAccess(array $parameters = []): bool
     {
-        return ! WarehouseScope::managedOnly();
+        return ! WarehouseScope::managedOnly() && parent::canAccess($parameters);
     }
 }
