@@ -23,6 +23,14 @@ trait HasKyc
      */
     abstract public function requiredDocumentGroups(): array;
 
+    /**
+     * The party's fixed-location columns; changed only through an approved LocationChangeRequest
+     * (or directly by an admin).
+     *
+     * @return list<string>
+     */
+    abstract public function locationAttributes(): array;
+
     public function kycDocuments(): MorphMany
     {
         return $this->morphMany(KycDocument::class, 'documentable');

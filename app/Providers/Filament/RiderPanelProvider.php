@@ -4,6 +4,7 @@ namespace App\Providers\Filament;
 
 use App\Filament\Rider\Pages\Auth\RiderRegister;
 use App\Filament\Rider\Pages\MyDeliveries;
+use App\Filament\Rider\Pages\RequestLocationChange;
 use App\Filament\Rider\Pages\RiderAccountStatus;
 use App\Filament\Rider\Pages\RiderOnboarding;
 use App\Filament\Shared\PhoneOrEmailLogin;
@@ -42,6 +43,7 @@ class RiderPanelProvider extends PanelProvider
                 MyDeliveries::class,
                 RiderOnboarding::class,
                 RiderAccountStatus::class,
+                RequestLocationChange::class,
             ])
             ->homeUrl(fn (): string => auth('delivery')->user()?->isApproved() ? MyDeliveries::getUrl() : RiderAccountStatus::getUrl())
             ->middleware([

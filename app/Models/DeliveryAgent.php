@@ -104,6 +104,11 @@ class DeliveryAgent extends Authenticatable implements FilamentUser
         return $groups;
     }
 
+    public function locationAttributes(): array
+    {
+        return ['city_id', 'home_warehouse_id', 'base_latitude', 'base_longitude'];
+    }
+
     public function city(): BelongsTo
     {
         return $this->belongsTo(City::class);
