@@ -110,7 +110,9 @@ class DeliveryAgentResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make()->using(fn (Model $record, array $data) => AuditedUpdate::save($record, $data, 'rider_updated_by_admin')),
+                EditAction::make()
+                    ->mutateRecordDataUsing(fn (array $data, Model $record) => AuditedUpdate::withHiddenFields($data, $record))
+                    ->using(fn (Model $record, array $data) => AuditedUpdate::save($record, $data, 'rider_updated_by_admin')),
                 DeleteAction::make(),
             ]);
     }

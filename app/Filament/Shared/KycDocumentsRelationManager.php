@@ -3,17 +3,22 @@
 namespace App\Filament\Shared;
 
 use App\Enums\KycDocumentStatus;
+use App\Enums\KycDocumentType;
 use App\Exceptions\VerificationException;
 use App\Models\AuditLog;
 use App\Models\KycDocument;
 use App\Services\Verification\VerificationService;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\HtmlString;
 
@@ -64,6 +69,28 @@ class KycDocumentsRelationManager extends RelationManager
                         ? new HtmlString('<a class="underline" target="_blank" href="'.e(route('admin.kyc.file', [$record, 'back'])).'">Back</a>')
                         : null),
             ])
+            ->headerActions([
+                // Staff upload on the applicant's behalf (e.g. walk-in suppliers); audited under the staff user.
+                Action::make('uploadDocument')
+                    ->label('Upload document')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->schema([
+                        Select::make('type')
+                            ->options(collect(KycDocumentType::cases())->mapWithKeys(fn ($t) => [$t->value => $t->label()]))
+                            ->required(),
+                        KycFormSchemas::upload('file_front', 'Front / document', fn () => $this->directory(), true, fn () => false),
+                        KycFormSchemas::upload('file_back', 'Back (if any)', fn () => $this->directory(), false, fn () => false),
+                        TextInput::make('document_number')->maxLength(40),
+                        DatePicker::make('expires_on')->label('Valid until (AD)')->after('today'),
+                    ])
+                    ->action(function (array $data) {
+                        $this->getOwnerRecord()->upsertKycDocument(
+                            KycDocumentType::from($data['type']),
+                            Arr::only($data, ['file_front', 'file_back', 'document_number', 'expires_on']),
+                        );
+                        Notification::make()->title('Document uploaded for review')->success()->send();
+                    }),
+            ])
             ->recordActions([
                 Action::make('revealNumber')
                     ->label('Reveal')
@@ -88,6 +115,13 @@ class KycDocumentsRelationManager extends RelationManager
                     ->schema([Textarea::make('reason')->label('Reason shown to the applicant')->required()->maxLength(500)])
                     ->action(fn (KycDocument $record, array $data) => $this->review(fn (VerificationService $s) => $s->rejectDocument($record, auth()->user(), $data['reason']))),
             ]);
+    }
+
+    private function directory(): string
+    {
+        $owner = $this->getOwnerRecord();
+
+        return 'kyc/'.$owner->getMorphClass().'/'.$owner->getKey();
     }
 
     private function review(callable $callback): void

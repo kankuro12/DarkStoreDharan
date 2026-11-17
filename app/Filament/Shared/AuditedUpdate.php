@@ -11,6 +11,19 @@ class AuditedUpdate
 {
     public const SECRET_FIELDS = ['password', 'bank_account_number', 'registration_number', 'remember_token'];
 
+    /**
+     * Edit forms are filled from attributesToArray(), which omits $hidden attributes; without this an
+     * untouched hidden field (bank account, registration number) would be saved back as null.
+     */
+    public static function withHiddenFields(array $data, Model $record): array
+    {
+        foreach (array_diff($record->getHidden(), ['password', 'remember_token']) as $field) {
+            $data[$field] = $record->getAttribute($field);
+        }
+
+        return $data;
+    }
+
     public static function save(Model $record, array $data, string $action): Model
     {
         $record->fill($data);

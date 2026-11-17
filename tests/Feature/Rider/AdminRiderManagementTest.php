@@ -166,6 +166,17 @@ class AdminRiderManagementTest extends TestCase
         $this->actingAs($rider->fresh(), 'delivery')->get('/rider/my-deliveries')->assertForbidden();
     }
 
+    public function test_editing_other_fields_keeps_bank_account_number(): void
+    {
+        $rider = $this->makeRider(['bank_account_number' => '0001112223334']);
+        $this->actingAs($this->coordinator);
+
+        Livewire::test(ManageDeliveryAgents::class, ['activeTab' => 'all'])
+            ->callTableAction('edit', $rider, data: ['base_latitude' => 26.83]);
+
+        $this->assertSame('0001112223334', $rider->fresh()->bank_account_number);
+    }
+
     public function test_mark_training_complete_makes_rider_dispatchable(): void
     {
         $rider = $this->makeRider(['verification_status' => VerificationStatus::Approved]);
