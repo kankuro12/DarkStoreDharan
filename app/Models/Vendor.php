@@ -96,6 +96,11 @@ class Vendor extends Authenticatable implements FilamentUser, HasName
         return $this->name;
     }
 
+    public function payouts(): HasMany
+    {
+        return $this->hasMany(VendorPayout::class);
+    }
+
     public function products(): HasMany
     {
         return $this->hasMany(Product::class);
