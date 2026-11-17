@@ -24,6 +24,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 
 class ProductResource extends Resource
@@ -57,6 +58,7 @@ class ProductResource extends Resource
                         'active' => 'Active',
                         'inactive' => 'Inactive',
                         'draft' => 'Draft',
+                        'pending_review' => 'Pending review (vendor)',
                     ])
                     ->default('active')
                     ->required(),
@@ -87,6 +89,11 @@ class ProductResource extends Resource
                 TextColumn::make('brand.name')
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('vendor.legal_name')
+                    ->label('Vendor')
+                    ->placeholder('DarkStore')
+                    ->visible(fn () => Gate::allows('manage-vendors'))
+                    ->toggleable(),
                 TextColumn::make('variants_count')
                     ->counts('variants')
                     ->label('Variants')
@@ -97,7 +104,7 @@ class ProductResource extends Resource
                     ->color(fn (string $state): string => match ($state) {
                         'active' => 'success',
                         'inactive' => 'gray',
-                        'draft' => 'warning',
+                        'draft', 'pending_review' => 'warning',
                         default => 'primary',
                     }),
                 TextColumn::make('created_at')
@@ -112,15 +119,21 @@ class ProductResource extends Resource
                         'active' => 'Active',
                         'inactive' => 'Inactive',
                         'draft' => 'Draft',
+                        'pending_review' => 'Pending review (vendor)',
                     ]),
                 SelectFilter::make('category_id')
                     ->label('Category')
                     ->relationship('category', 'name'),
+                SelectFilter::make('vendor_id')
+                    ->label('Vendor')
+                    ->relationship('vendor', 'legal_name')
+                    ->visible(fn () => Gate::allows('manage-vendors')),
                 SelectFilter::make('brand_id')
                     ->label('Brand')
                     ->relationship('brand', 'name'),
             ])
             ->recordActions([
+                ...VendorSubmissionActions::make(),
                 EditAction::make(),
                 DeleteAction::make(),
             ])

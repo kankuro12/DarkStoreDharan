@@ -22,13 +22,22 @@ class Product extends Model
         'image',
         'gallery',
         'status',
+        'vendor_id',
     ];
+
+    // Customers must never learn who supplies a product.
+    protected $hidden = ['vendor_id'];
 
     protected function casts(): array
     {
         return [
             'gallery' => 'array',
         ];
+    }
+
+    public function vendor(): BelongsTo
+    {
+        return $this->belongsTo(Vendor::class);
     }
 
     public function category(): BelongsTo

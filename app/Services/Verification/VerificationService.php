@@ -9,6 +9,7 @@ use App\Models\AuditLog;
 use App\Models\DeliveryAgent;
 use App\Models\KycDocument;
 use App\Models\User;
+use App\Models\Vendor;
 use App\Services\Sms\SmsService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -87,12 +88,44 @@ class VerificationService
     {
         $this->transition($party, VerificationStatus::Suspended, $actor, $reason, ['rejection_reason' => $reason]);
 
+        if ($party instanceof Vendor) {
+            $this->hideVendorProducts($party, $actor);
+        }
+
         return $party instanceof DeliveryAgent ? $party->releaseUnstartedDeliveries() : 0;
     }
 
     public function reactivate(Model $party, User $actor): void
     {
         $this->transition($party, VerificationStatus::Approved, $actor, null, ['rejection_reason' => null]);
+
+        if ($party instanceof Vendor) {
+            $this->restoreVendorProducts($party, $actor);
+        }
+    }
+
+    /** A suspended supplier's live products leave the storefront; the exact ids are recorded for restoring. */
+    protected function hideVendorProducts(Vendor $vendor, ?User $actor): void
+    {
+        $ids = $vendor->products()->where('status', 'active')->pluck('id')->all();
+        $vendor->products()->whereKey($ids)->update(['status' => 'inactive']);
+
+        AuditLog::record('vendor_products_hidden', $vendor, null, ['product_ids' => $ids], null, $actor?->id);
+    }
+
+    /** Re-list only what the last suspension hid (products an admin had switched off stay off). */
+    protected function restoreVendorProducts(Vendor $vendor, User $actor): void
+    {
+        $hidden = AuditLog::where('action', 'vendor_products_hidden')
+            ->where('subject_type', Vendor::class)
+            ->where('subject_id', $vendor->id)
+            ->latest('id')
+            ->value('after');
+
+        $ids = $hidden['product_ids'] ?? [];
+        $vendor->products()->whereKey($ids)->where('status', 'inactive')->update(['status' => 'active']);
+
+        AuditLog::record('vendor_products_restored', $vendor, null, ['product_ids' => $ids], null, $actor->id);
     }
 
     public function reopen(Model $party, User $actor, string $reason): void

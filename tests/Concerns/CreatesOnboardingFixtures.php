@@ -10,7 +10,11 @@ use App\Enums\PaymentStatus;
 use App\Enums\UserRole;
 use App\Models\City;
 use App\Models\DeliveryAgent;
+use App\Models\Inventory;
 use App\Models\Order;
+use App\Models\Product;
+use App\Models\ProductPrice;
+use App\Models\ProductVariant;
 use App\Models\User;
 use App\Models\Vendor;
 use App\Models\Warehouse;
@@ -80,6 +84,28 @@ trait CreatesOnboardingFixtures
             'status' => 'active',
             'verification_status' => 'draft',
         ], $attributes));
+    }
+
+    /** A product sellable in $city from $warehouse (city price + 10 in stock), optionally supplied by $vendor. */
+    protected function makeSellableVariant(City $city, Warehouse $warehouse, ?Vendor $vendor = null, string $name = 'Organic Honey 500g', float $supplyPrice = 300): ProductVariant
+    {
+        $product = Product::create([
+            'name' => $name,
+            'slug' => Str::slug($name).'-'.Str::random(4),
+            'status' => 'active',
+            'vendor_id' => $vendor?->id,
+        ]);
+        $variant = $product->variants()->create([
+            'sku' => 'SKU-'.Str::upper(Str::random(6)),
+            'name' => '500g',
+            'price' => 450,
+            'supply_price' => $supplyPrice,
+            'status' => 'active',
+        ]);
+        ProductPrice::create(['product_variant_id' => $variant->id, 'city_id' => $city->id, 'price' => 450]);
+        Inventory::create(['warehouse_id' => $warehouse->id, 'product_variant_id' => $variant->id, 'quantity' => 10, 'reserved_quantity' => 0]);
+
+        return $variant;
     }
 
     protected function makeOrderFor(?DeliveryAgent $rider, Warehouse $warehouse, DeliveryStatus $deliveryStatus, ?int $cityId = null): Order

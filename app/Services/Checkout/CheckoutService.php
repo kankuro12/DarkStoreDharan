@@ -14,6 +14,7 @@ use App\Models\City;
 use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\ProductVariant;
 use App\Services\Cart\CartService;
 use App\Services\Fulfillment\WarehouseSelector;
 use App\Services\Inventory\StockReservationService;
@@ -156,12 +157,21 @@ class CheckoutService
                 $reservation->update(['order_id' => $order->id]);
             }
 
-            // Create immutable OrderItem snapshots (§16, §38.2)
+            // Create immutable OrderItem snapshots (§16, §38.2), incl. the vendor's agreed supply price for settlement
+            $variants = ProductVariant::with('product:id,vendor_id')
+                ->whereIn('id', array_column($pricing['items'], 'variant_id'))
+                ->get()
+                ->keyBy('id');
+
             foreach ($pricing['items'] as $calcItem) {
+                $variant = $variants->get($calcItem['variant_id']);
+
                 OrderItem::create([
                     'order_id' => $order->id,
                     'product_id' => $calcItem['product_id'],
                     'variant_id' => $calcItem['variant_id'],
+                    'vendor_id' => $variant?->product?->vendor_id,
+                    'unit_supply_price' => $variant?->product?->vendor_id ? $variant->supply_price : null,
                     'product_name' => $calcItem['product_name'],
                     'sku' => $calcItem['sku'],
                     'quantity' => $calcItem['quantity'],
