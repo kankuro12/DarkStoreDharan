@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\City;
+use App\Models\DeliveryAgent;
 use App\Models\Setting;
 use App\Services\Cart\CartService;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
@@ -25,6 +27,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Stable morph aliases for KYC documents / location requests (not enforced: legacy morphs keep class names).
+        Relation::morphMap([
+            'delivery_agent' => DeliveryAgent::class,
+        ]);
+
         View::composer(['layouts.storefront', 'storefront.*'], function ($view) {
             $cartService = app(CartService::class);
             $allCities = City::active()->get();

@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Enums\KycDocumentType;
+use App\Enums\VerificationStatus;
+use App\Models\Concerns\HasKyc;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -12,7 +15,7 @@ use Illuminate\Notifications\Notifiable;
 
 class DeliveryAgent extends Authenticatable implements FilamentUser
 {
-    use HasFactory, Notifiable;
+    use HasFactory, HasKyc, Notifiable;
 
     protected $fillable = [
         'name',
@@ -24,6 +27,15 @@ class DeliveryAgent extends Authenticatable implements FilamentUser
         'availability',
         'current_latitude',
         'current_longitude',
+        'verification_status',
+        'submitted_at',
+        'approved_at',
+        'approved_by',
+        'rejection_reason',
+        'agreement_version',
+        'agreement_accepted_at',
+        'agreement_ip',
+        'training_completed_at',
     ];
 
     protected $hidden = [
@@ -37,6 +49,19 @@ class DeliveryAgent extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'current_latitude' => 'decimal:7',
             'current_longitude' => 'decimal:7',
+            'verification_status' => VerificationStatus::class,
+            'submitted_at' => 'datetime',
+            'approved_at' => 'datetime',
+            'agreement_accepted_at' => 'datetime',
+            'training_completed_at' => 'datetime',
+        ];
+    }
+
+    public function requiredDocumentGroups(): array
+    {
+        return [
+            [KycDocumentType::ProfilePhoto],
+            [KycDocumentType::Citizenship, KycDocumentType::NationalId],
         ];
     }
 
