@@ -23,6 +23,11 @@ class MyDeliveries extends Page
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTruck;
 
+    public static function canAccess(): bool
+    {
+        return (bool) auth('delivery')->user()?->isApproved();
+    }
+
     /**
      * @return Collection<int, Order>
      */
