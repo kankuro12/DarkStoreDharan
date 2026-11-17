@@ -12,6 +12,7 @@ use App\Filament\Shared\KycDocumentsRelationManager;
 use App\Models\DeliveryAgent;
 use App\Models\Warehouse;
 use BackedEnum;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
@@ -92,14 +93,12 @@ class DeliveryAgentResource extends Resource
         return $table
             ->modifyQueryUsing(fn (Builder $query) => $query->with(['city', 'homeWarehouse'])->withMin('kycDocuments', 'expires_on'))
             ->columns([
-                TextColumn::make('name')->searchable(),
-                TextColumn::make('phone')->searchable(),
-                TextColumn::make('city.name'),
-                TextColumn::make('homeWarehouse.name')->label('Hub')->placeholder('—'),
-                TextColumn::make('vehicle_type')->placeholder('—'),
+                TextColumn::make('name')->searchable(['name', 'phone'])->description(fn (DeliveryAgent $r) => $r->phone),
+                TextColumn::make('homeWarehouse.name')->label('Hub')->placeholder('—')->description(fn (DeliveryAgent $r) => $r->city?->name),
+                TextColumn::make('vehicle_type')->placeholder('—')->visibleFrom('2xl'),
                 TextColumn::make('verification_status')->label('Verification')->badge(),
                 IconColumn::make('training_completed_at')->label('Trained')->boolean(),
-                TextColumn::make('status')->label('Login')->badge()->color(fn ($state) => $state === 'inactive' ? 'danger' : 'gray'),
+                TextColumn::make('status')->label('Login')->badge()->color(fn ($state) => $state === 'inactive' ? 'danger' : 'gray')->visibleFrom('2xl'),
                 TextColumn::make('kyc_documents_min_expires_on')->label('Next doc expiry')->date()->placeholder('—')->sortable(),
                 TextColumn::make('submitted_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
@@ -110,10 +109,12 @@ class DeliveryAgentResource extends Resource
             ])
             ->recordActions([
                 ViewAction::make(),
-                EditAction::make()
-                    ->mutateRecordDataUsing(fn (array $data, Model $record) => AuditedUpdate::withHiddenFields($data, $record))
-                    ->using(fn (Model $record, array $data) => AuditedUpdate::save($record, $data, 'rider_updated_by_admin')),
-                DeleteAction::make(),
+                ActionGroup::make([
+                    EditAction::make()
+                        ->mutateRecordDataUsing(fn (array $data, Model $record) => AuditedUpdate::withHiddenFields($data, $record))
+                        ->using(fn (Model $record, array $data) => AuditedUpdate::save($record, $data, 'rider_updated_by_admin')),
+                    DeleteAction::make(),
+                ]),
             ]);
     }
 

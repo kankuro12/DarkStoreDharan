@@ -21,7 +21,7 @@ class ViewDeliveryAgent extends ViewRecord
     public function infolist(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Verification')->columns(4)->schema([
+            Section::make('Verification')->columns(['default' => 1, 'sm' => 2, 'lg' => 4])->columnSpanFull()->schema([
                 TextEntry::make('verification_status')->badge(),
                 TextEntry::make('status')->label('Login')->badge()->color(fn ($state) => $state === 'inactive' ? 'danger' : 'success'),
                 TextEntry::make('training_completed_at')->label('Training')->dateTime()->placeholder('Not completed'),
@@ -31,7 +31,7 @@ class ViewDeliveryAgent extends ViewRecord
                 TextEntry::make('agreement_version')->placeholder('—'),
                 TextEntry::make('agreement_ip')->label('Agreement IP')->placeholder('—'),
             ]),
-            Section::make('Personal')->columns(4)->schema([
+            Section::make('Personal')->columns(['default' => 1, 'sm' => 2, 'lg' => 4])->columnSpanFull()->schema([
                 TextEntry::make('name'),
                 TextEntry::make('phone'),
                 TextEntry::make('email')->placeholder('—'),
@@ -41,7 +41,7 @@ class ViewDeliveryAgent extends ViewRecord
                 TextEntry::make('emergency_contact_name')->label('Emergency contact')
                     ->formatStateUsing(fn ($state, DeliveryAgent $r) => "{$state} ({$r->emergency_contact_relation}) {$r->emergency_contact_phone}")->placeholder('—'),
             ]),
-            Section::make('Operations & payout')->columns(4)->schema([
+            Section::make('Operations & payout')->columns(['default' => 1, 'sm' => 2, 'lg' => 4])->columnSpanFull()->schema([
                 TextEntry::make('city.name'),
                 TextEntry::make('homeWarehouse.name')->label('Home hub')->placeholder('—'),
                 TextEntry::make('vehicle_type')->placeholder('—'),

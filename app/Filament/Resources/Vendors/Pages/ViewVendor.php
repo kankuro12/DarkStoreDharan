@@ -19,7 +19,7 @@ class ViewVendor extends ViewRecord
     public function infolist(Schema $schema): Schema
     {
         return $schema->components([
-            Section::make('Verification')->columns(4)->schema([
+            Section::make('Verification')->columns(['default' => 1, 'sm' => 2, 'lg' => 4])->columnSpanFull()->schema([
                 TextEntry::make('verification_status')->badge(),
                 TextEntry::make('status')->label('Login')->badge()->color(fn ($state) => $state === 'inactive' ? 'danger' : 'success'),
                 TextEntry::make('submitted_at')->dateTime()->placeholder('—'),
@@ -28,7 +28,7 @@ class ViewVendor extends ViewRecord
                 TextEntry::make('agreement_version')->placeholder('—'),
                 TextEntry::make('agreement_ip')->label('Agreement IP')->placeholder('—'),
             ]),
-            Section::make('Business')->columns(4)->schema([
+            Section::make('Business')->columns(['default' => 1, 'sm' => 2, 'lg' => 4])->columnSpanFull()->schema([
                 TextEntry::make('legal_name'),
                 TextEntry::make('trade_name')->placeholder('—'),
                 TextEntry::make('business_type')->badge(),
@@ -42,7 +42,7 @@ class ViewVendor extends ViewRecord
                 TextEntry::make('phone'),
                 TextEntry::make('email'),
             ]),
-            Section::make('Pickup & payout')->columns(4)->schema([
+            Section::make('Pickup & payout')->columns(['default' => 1, 'sm' => 2, 'lg' => 4])->columnSpanFull()->schema([
                 TextEntry::make('city.name'),
                 TextEntry::make('pickup_address')->state(fn (Vendor $v) => collect([$v->pickup_tole, $v->pickup_municipality.' - '.$v->pickup_ward, $v->pickup_district, $v->pickup_province])->filter()->implode(', '))->columnSpan(2),
                 TextEntry::make('pickup_latitude')->label('Coordinates')

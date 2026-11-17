@@ -47,20 +47,23 @@ class KycDocumentsRelationManager extends RelationManager
         return $table
             ->recordTitle(fn (KycDocument $record) => $record->type->label())
             ->columns([
-                TextColumn::make('type')->badge(false),
+                // Details sit under the type and the reason under the status, keeping row actions on screen.
+                TextColumn::make('type')
+                    ->badge(false)
+                    ->wrap()
+                    ->description(fn (KycDocument $record) => collect($record->meta ?? [])
+                        ->except('reminded_days')
+                        ->map(fn ($v, $k) => str_replace('_', ' ', $k).': '.(is_array($v) ? implode(', ', $v) : $v))
+                        ->implode(' · ') ?: null),
                 TextColumn::make('document_number')
                     ->label('Number')
                     ->formatStateUsing(fn (?string $state) => $state ? '••••'.substr($state, -4) : '—')
-                    ->placeholder('—'),
-                TextColumn::make('meta')
-                    ->label('Details')
-                    ->formatStateUsing(fn ($state, KycDocument $record) => collect($record->meta ?? [])
-                        ->map(fn ($v, $k) => str_replace('_', ' ', $k).': '.(is_array($v) ? implode(', ', $v) : $v))
-                        ->implode(' · '))
-                    ->placeholder('—'),
-                TextColumn::make('expires_on')->date()->placeholder('—')->sortable(),
-                TextColumn::make('status')->badge(),
-                TextColumn::make('rejection_reason')->label('Reason')->wrap()->placeholder('—'),
+                    ->placeholder('—')
+                    ->visibleFrom('md'),
+                TextColumn::make('expires_on')->date()->placeholder('—')->sortable()->visibleFrom('md'),
+                TextColumn::make('status')
+                    ->badge()
+                    ->description(fn (KycDocument $record) => $record->rejection_reason),
                 TextColumn::make('file_front')
                     ->label('Files')
                     ->formatStateUsing(fn () => 'Front')
@@ -93,7 +96,8 @@ class KycDocumentsRelationManager extends RelationManager
             ])
             ->recordActions([
                 Action::make('revealNumber')
-                    ->label('Reveal')
+                    ->label('Reveal number')
+                    ->iconButton()
                     ->icon('heroicon-o-eye')
                     ->visible(fn (KycDocument $record) => filled($record->document_number))
                     ->modalHeading(fn (KycDocument $record) => $record->type->label())

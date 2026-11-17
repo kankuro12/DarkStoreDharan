@@ -98,12 +98,11 @@ class VendorResource extends Resource
             ->modifyQueryUsing(fn (Builder $query) => $query->with('city')->withMin('kycDocuments', 'expires_on'))
             ->columns([
                 TextColumn::make('legal_name')->searchable()->description(fn (Vendor $v) => $v->trade_name),
-                TextColumn::make('pan_number')->label('PAN')->searchable(),
-                TextColumn::make('business_type')->badge(),
-                TextColumn::make('city.name'),
+                TextColumn::make('pan_number')->label('PAN')->searchable()->description(fn (Vendor $v) => $v->city?->name),
+                TextColumn::make('business_type')->badge()->visibleFrom('2xl'),
                 TextColumn::make('verification_status')->label('Verification')->badge(),
-                IconColumn::make('vat_registered')->label('VAT')->boolean(),
-                TextColumn::make('status')->label('Login')->badge()->color(fn ($state) => $state === 'inactive' ? 'danger' : 'gray'),
+                IconColumn::make('vat_registered')->label('VAT')->boolean()->visibleFrom('2xl'),
+                TextColumn::make('status')->label('Login')->badge()->color(fn ($state) => $state === 'inactive' ? 'danger' : 'gray')->visibleFrom('2xl'),
                 TextColumn::make('kyc_documents_min_expires_on')->label('Next doc expiry')->date()->placeholder('—')->sortable(),
                 TextColumn::make('submitted_at')->dateTime()->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])

@@ -28,7 +28,7 @@ class VendorStockOverview extends TableWidget
             ->columns([
                 TextColumn::make('product.name')->label('Product')->searchable(),
                 TextColumn::make('name')->label('Pack'),
-                TextColumn::make('sku')->fontFamily('mono'),
+                TextColumn::make('sku')->fontFamily('mono')->visibleFrom('md'), // keep "Available" on screen on phones
                 TextColumn::make('available')
                     ->label('Available')
                     ->state(fn (ProductVariant $record) => max(0, (int) $record->on_hand - (int) $record->reserved))

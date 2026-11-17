@@ -94,8 +94,9 @@ class VendorProductResource extends Resource
             ->defaultSort('created_at', 'desc')
             ->columns([
                 TextColumn::make('name')->searchable(),
-                TextColumn::make('category.name'),
-                TextColumn::make('variants_count')->counts('variants')->label('Packs'),
+                // Secondary columns hide on phones so the review status stays visible.
+                TextColumn::make('category.name')->visibleFrom('md'),
+                TextColumn::make('variants_count')->counts('variants')->label('Packs')->visibleFrom('md'),
                 TextColumn::make('status')
                     ->badge()
                     ->formatStateUsing(fn (string $state) => match ($state) {

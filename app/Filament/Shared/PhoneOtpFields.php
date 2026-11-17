@@ -43,6 +43,7 @@ class PhoneOtpFields
                 ->suffixAction(
                     Action::make('sendOtp')
                         ->label('Send code')
+                        ->tooltip('Send code')
                         ->icon('heroicon-o-chat-bubble-left-ellipsis')
                         ->action(function (Get $get) use ($otpPurpose) {
                             $phone = SmsService::normalize((string) $get('phone'));
@@ -69,7 +70,7 @@ class PhoneOtpFields
 
             TextInput::make('otp_code')
                 ->label('Verification code')
-                ->helperText('Tap "Send code" and enter the 6-digit code we text you.')
+                ->helperText('Tap the message icon beside your mobile number, then enter the 6-digit code we text you.')
                 ->required()
                 ->length(6)
                 ->dehydrated(false),
