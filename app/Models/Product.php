@@ -94,11 +94,14 @@ class Product extends Model
     protected function resolveMediaUrl($value): ?string
     {
         if (is_numeric($value)) {
-            $media = Media::find($value);
-
-            return $media ? asset('storage/'.$media->path) : null;
+            // Curator media: let the media resolve its own (disk-aware) URL.
+            return Media::find($value)?->url;
         }
 
-        return $value ? (filter_var($value, FILTER_VALIDATE_URL) ? $value : asset('storage/'.$value)) : null;
+        if (! $value) {
+            return null;
+        }
+
+        return filter_var($value, FILTER_VALIDATE_URL) ? $value : asset('storage/'.$value);
     }
 }

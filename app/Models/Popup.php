@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Awcodes\Curator\Models\Media;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -79,7 +80,16 @@ class Popup extends Model
 
     public function imageUrl(): ?string
     {
-        return $this->image ? Storage::disk('public')->url($this->image) : null;
+        if (! $this->image) {
+            return null;
+        }
+
+        if (is_numeric($this->image)) {
+            // Curator media: let the media resolve its own (disk-aware) URL.
+            return Media::find($this->image)?->url;
+        }
+
+        return Storage::disk('public')->url($this->image);
     }
 
     /** Changes when the popup is edited, so "once" popups show again after an update. */
