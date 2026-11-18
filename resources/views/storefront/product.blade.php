@@ -32,46 +32,43 @@
 {!! json_encode($schemaData, JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
 </script>
 
-<div class="max-w-5xl mx-auto py-4 space-y-8">
+<div class="max-w-5xl mx-auto py-4 space-y-10">
 
     <!-- Breadcrumb Navigation & Actions -->
-    <div class="flex items-center justify-between">
-        <nav class="flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <a href="{{ route('storefront.home') }}" class="hover:text-slate-900 transition flex items-center gap-1.5">
-                <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg>
-                <span>Home</span>
-            </a>
+    <div class="flex items-center justify-between gap-3">
+        <nav class="flex items-center gap-2 text-xs text-slate-500 min-w-0">
+            <a href="{{ route('storefront.home') }}" class="hover:text-slate-900 transition shrink-0">Home</a>
             <span class="text-slate-400">/</span>
             @if($product['category'])
-                <a href="{{ route('storefront.home', ['category_id' => $product['category']['id'] ?? null]) }}" class="hover:text-slate-900 transition">
+                <a href="{{ route('storefront.home', ['category_id' => $product['category']['id'] ?? null]) }}" class="hover:text-slate-900 transition whitespace-nowrap">
                     {{ $product['category']['name'] ?? 'Category' }}
                 </a>
                 <span class="text-slate-400">/</span>
             @endif
-            <span class="text-slate-900 truncate max-w-xs">{{ $product['name'] }}</span>
+            <span class="text-slate-900 truncate">{{ $product['name'] }}</span>
         </nav>
 
-        <button 
-            type="button" 
-            onclick="shareProduct('{{ route('storefront.share.product', $product['slug']) }}')" 
-            class="flex items-center gap-1.5 text-xs font-bold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-full hover:bg-slate-50 transition shadow-sm cursor-pointer"
+        <button
+            type="button"
+            onclick="shareProduct('{{ route('storefront.share.product', $product['slug']) }}')"
+            class="flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 px-2 py-1.5 transition cursor-pointer shrink-0"
         >
-            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" />
             </svg>
             <span>Share</span>
         </button>
     </div>
 
-    <!-- Product Hero Card Grid -->
-    <div class="bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xs grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
-        
-        <!-- Left Column: Product Image Gallery & Badges -->
-        <div class="space-y-4">
+    <!-- Product Hero Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
+
+        <!-- Left Column: Product Image Gallery -->
+        <div class="space-y-3">
             @php
                 $galleryImages = ! empty($product['gallery_images']) ? $product['gallery_images'] : array_filter([$product['image']]);
             @endphp
-            <div class="aspect-square bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-100 relative group">
+            <div class="aspect-square bg-slate-50 rounded-2xl overflow-hidden flex items-center justify-center">
                 @if(! empty($galleryImages))
                     <img
                         id="product-gallery-main-image"
@@ -80,17 +77,8 @@
                         class="w-full h-full object-cover transition duration-300"
                     >
                 @else
-                    <div class="w-20 h-20 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center">
-                        <svg class="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                    </div>
+                    <svg class="w-12 h-12 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
                 @endif
-
-                <!-- Delivery Speed Badge -->
-                <div class="absolute top-4 left-4 delivery-badge px-3 py-1.5 rounded-full text-xs font-bold tracking-tight inline-flex items-center gap-1.5 shadow-sm">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <svg class="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
-                    <span>{{ $product['estimated_minutes'] }} min fast delivery in {{ $product['city_name'] }}</span>
-                </div>
             </div>
 
             @if(count($galleryImages) > 1)
@@ -100,161 +88,98 @@
                         <button
                             type="button"
                             onclick="selectGalleryImage('{{ $img }}', this)"
-                            class="gallery-thumb-btn shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition cursor-pointer {{ $index === 0 ? 'border-amber-500' : 'border-slate-200 hover:border-slate-300' }}"
+                            class="gallery-thumb-btn shrink-0 w-16 h-16 rounded-xl overflow-hidden border-2 transition cursor-pointer {{ $index === 0 ? 'border-slate-900' : 'border-slate-200 hover:border-slate-300' }}"
                         >
                             <img src="{{ $img }}" alt="{{ $product['name'] }} thumbnail {{ $index + 1 }}" class="w-full h-full object-cover">
                         </button>
                     @endforeach
                 </div>
             @endif
-
-            <!-- Dark Store Micro-Fulfillment Features -->
-            <div class="grid grid-cols-2 gap-3 pt-1">
-                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                    </div>
-                    <div>
-                        <h4 class="text-[11px] font-bold text-slate-900">Cold Chain</h4>
-                        <p class="text-[10px] text-slate-500">Chilled & sealed</p>
-                    </div>
-                </div>
-                <div class="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center gap-2.5">
-                    <div class="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                    </div>
-                    <div>
-                        <h4 class="text-[11px] font-bold text-slate-900">Local Hub</h4>
-                        <p class="text-[10px] text-slate-500">{{ $product['city_name'] }} dark store</p>
-                    </div>
-                </div>
-            </div>
         </div>
 
         <!-- Right Column: Product Details & Add to Bag -->
-        <div class="flex flex-col justify-between space-y-6">
-            <div class="space-y-4">
-                <div class="flex items-center gap-2">
-                    <span class="text-[11px] font-bold uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-lg">
-                        {{ $product['brand']['name'] ?? 'Local Essentials' }}
-                    </span>
-                    @if($product['category'])
-                        <span class="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-lg">
-                            {{ $product['category']['name'] ?? 'Pantry' }}
-                        </span>
-                    @endif
-                </div>
+        <div class="space-y-6">
+            <div class="space-y-3">
+                <p class="text-xs text-slate-500">
+                    {{ $product['brand']['name'] ?? 'Local Essentials' }}@if($product['category']) · {{ $product['category']['name'] ?? 'Pantry' }}@endif
+                </p>
 
                 <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950 leading-tight">
                     {{ $product['name'] }}
                 </h1>
 
-                <p class="text-xs sm:text-sm text-slate-600 leading-relaxed">
+                <p class="text-sm text-slate-600 leading-relaxed">
                     {{ $product['description'] }}
                 </p>
+            </div>
 
-                <!-- Variants Selection Strip -->
-                <div class="pt-4 border-t border-slate-100 space-y-2.5">
-                    <label class="block text-xs font-bold text-slate-900 uppercase tracking-wider">
-                        Select Pack Size / Variant:
-                    </label>
-                    <div class="flex flex-wrap gap-2.5" id="variant-selector">
-                        @foreach($product['variants'] as $index => $variant)
-                            <button 
-                                type="button"
-                                onclick="selectVariant({{ $variant['id'] }}, {{ $variant['price'] }}, {{ $variant['available_stock'] }}, '{{ $variant['sku'] }}', this)"
-                                class="variant-btn px-4 py-2.5 rounded-2xl text-xs font-bold border transition-all duration-150 cursor-pointer text-left {{ $index === 0 ? 'border-amber-500 bg-amber-50/70 text-slate-950 ring-2 ring-amber-500/20' : 'border-slate-200 text-slate-700 hover:border-slate-300 hover:bg-slate-50' }} {{ ! $variant['is_available'] ? 'opacity-50' : '' }}"
-                            >
-                                <span class="block font-bold">{{ $variant['name'] }}</span>
-                                <span class="block text-[11px] text-slate-500 font-mono font-normal">Rs {{ number_format($variant['price']) }}</span>
-                            </button>
-                        @endforeach
-                    </div>
-                </div>
-
-                <!-- Price and Live City Stock Indicator -->
-                <div class="pt-4 border-t border-slate-100 flex items-baseline gap-3">
-                    <span id="active-price" class="text-3xl font-extrabold text-slate-950 font-mono">
-                        Rs {{ number_format($primaryVariant['price'] ?? 0) }}
-                    </span>
-                    <span id="active-stock" class="text-xs font-bold {{ ($primaryVariant['available_stock'] ?? 0) > 0 ? 'text-emerald-800 bg-emerald-100 border border-emerald-200' : 'text-rose-800 bg-rose-100 border border-rose-200' }} px-3 py-1 rounded-full">
-                        {{ ($primaryVariant['available_stock'] ?? 0) > 0 ? 'In Stock (' . ($primaryVariant['available_stock'] ?? 0) . ' units)' : 'Out of Stock in ' . $product['city_name'] }}
-                    </span>
+            <!-- Variants Selection Strip -->
+            <div class="space-y-2.5">
+                <label class="block text-sm font-semibold text-slate-900">
+                    Pack size
+                </label>
+                <div class="flex flex-wrap gap-2.5" id="variant-selector">
+                    @foreach($product['variants'] as $index => $variant)
+                        <button
+                            type="button"
+                            onclick="selectVariant({{ $variant['id'] }}, {{ $variant['price'] }}, {{ $variant['available_stock'] }}, '{{ $variant['sku'] }}', this)"
+                            class="variant-btn px-4 py-2.5 rounded-xl text-sm border transition cursor-pointer text-left {{ $index === 0 ? 'border-slate-900 bg-slate-50' : 'border-slate-200 hover:border-slate-300' }} {{ ! $variant['is_available'] ? 'opacity-50' : '' }}"
+                        >
+                            <span class="block font-semibold text-slate-900">{{ $variant['name'] }}</span>
+                            <span class="block text-xs text-slate-500">Rs {{ number_format($variant['price']) }}</span>
+                        </button>
+                    @endforeach
                 </div>
             </div>
 
-            <!-- Add to Cart Stepper & CTA -->
-            <div class="pt-6 border-t border-slate-100 space-y-3">
-                <input type="hidden" id="selected-variant-id" value="{{ $primaryVariant['id'] ?? '' }}">
-
-                <div class="flex items-center gap-3">
-                    <button 
-                        type="button" 
-                        id="main-add-button"
-                        onclick="addActiveVariantToCart()"
-                        {{ ! $product['is_available'] ? 'disabled' : '' }}
-                        class="flex-1 py-4 bg-slate-950 hover:bg-black text-white font-extrabold text-sm rounded-2xl uppercase tracking-wider transition shadow-md cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-98"
-                    >
-                        <svg class="w-5 h-5 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                        <span>{{ $product['is_available'] ? '+ Add to Basket' : 'Out of Stock' }}</span>
-                    </button>
-                </div>
-
-                <div class="text-[11px] text-slate-500 flex items-center gap-2">
-                    <svg class="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" /></svg>
-                    <span>Fulfillment from {{ $product['city_name'] }} Dark Store with tamper-proof bag sealing.</span>
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Product Specifications & Highlights -->
-    <div class="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-xs space-y-4">
-        <h3 class="text-sm font-extrabold text-slate-950 uppercase tracking-wider">Product Highlights & Storage</h3>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs">
-            <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                <span class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Fulfillment Hub</span>
-                <span class="font-extrabold text-slate-900 block">{{ $product['city_name'] }} Central Store</span>
-                <span class="text-[10px] text-emerald-700 font-semibold inline-flex items-center gap-1">
-                    <svg class="w-3 h-3 text-amber-500 inline" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/></svg>
-                    ~{{ $product['estimated_minutes'] }}m SLA
+            <!-- Price and Live City Stock Indicator -->
+            <div class="flex items-baseline gap-3">
+                <span id="active-price" class="text-3xl font-extrabold text-slate-950">
+                    Rs {{ number_format($primaryVariant['price'] ?? 0) }}
+                </span>
+                <span id="active-stock" class="text-sm font-medium {{ ($primaryVariant['available_stock'] ?? 0) > 0 ? 'text-emerald-700' : 'text-rose-700' }}">
+                    {{ ($primaryVariant['available_stock'] ?? 0) > 0 ? 'In Stock (' . ($primaryVariant['available_stock'] ?? 0) . ' units)' : 'Out of Stock in ' . $product['city_name'] }}
                 </span>
             </div>
-            <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                <span class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Storage Condition</span>
-                <span class="font-extrabold text-slate-900 block">Temperature Controlled</span>
-                <span class="text-[10px] text-slate-500 font-medium">Refrigerated if dairy/beverage</span>
-            </div>
-            <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                <span class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Return Window</span>
-                <span class="font-extrabold text-slate-900 block">24 Hours Quality Check</span>
-                <span class="text-[10px] text-emerald-700 font-semibold">Direct replacement</span>
-            </div>
-            <div class="bg-slate-50 p-3.5 rounded-2xl border border-slate-100">
-                <span class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Packaging</span>
-                <span class="font-extrabold text-slate-900 block">Tamper-Proof Sealed</span>
-                <span class="text-[10px] text-slate-500 font-medium">QR Verified Bag</span>
+
+            <!-- Add to Cart CTA -->
+            <div class="space-y-4">
+                <input type="hidden" id="selected-variant-id" value="{{ $primaryVariant['id'] ?? '' }}">
+
+                <button
+                    type="button"
+                    id="main-add-button"
+                    onclick="addActiveVariantToCart()"
+                    {{ ! $product['is_available'] ? 'disabled' : '' }}
+                    class="w-full py-4 bg-slate-900 hover:bg-black text-white font-semibold text-sm rounded-2xl transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 active:scale-98"
+                >
+                    {{ $product['is_available'] ? 'Add to Basket' : 'Out of Stock' }}
+                </button>
+
+                <!-- Delivery & Storage Details -->
+                <ul class="text-xs text-slate-500 space-y-1.5 pt-4 border-t border-slate-100">
+                    <li>Delivered in ~{{ $product['estimated_minutes'] }} min from our {{ $product['city_name'] }} store</li>
+                    <li>Temperature controlled, refrigerated if dairy or beverage</li>
+                    <li>Tamper-proof sealed bag · 24-hour quality check and replacement</li>
+                </ul>
             </div>
         </div>
+
     </div>
 
     <!-- Related Products in Category -->
     @if(!empty($relatedProducts))
         <div class="space-y-4 pt-2">
-            <div class="flex items-center justify-between">
-                <h3 class="text-base sm:text-lg font-extrabold text-slate-950">Pairs Well With / More in Category</h3>
-                <span class="text-xs font-semibold text-slate-500">Fast dispatch together</span>
-            </div>
+            <h3 class="text-lg font-bold text-slate-950">More in this category</h3>
 
             <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 @foreach($relatedProducts as $rel)
                     @php
                         $relVariant = $rel['variants'][0] ?? null;
                     @endphp
-                    <div class="bg-white rounded-2xl p-3 border border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-md transition duration-200 flex flex-col justify-between">
+                    <div class="bg-white rounded-2xl p-3 border border-slate-200 hover:border-slate-300 transition flex flex-col justify-between">
                         <a href="{{ route('storefront.product', $rel['slug']) }}" class="block">
-                            <div class="aspect-square bg-slate-50 rounded-xl overflow-hidden mb-2 flex items-center justify-center border border-slate-100">
+                            <div class="aspect-square bg-slate-50 rounded-xl overflow-hidden mb-2 flex items-center justify-center">
                                 @if(!empty($rel['image']))
                                     <img src="{{ $rel['image'] }}" alt="{{ $rel['name'] }}" class="w-full h-full object-cover" loading="lazy">
                                 @else
@@ -263,20 +188,20 @@
                                     </div>
                                 @endif
                             </div>
-                            <h4 class="text-xs font-bold text-slate-900 line-clamp-1 hover:text-amber-600 transition">{{ $rel['name'] }}</h4>
-                            <span class="text-[10px] text-slate-500 block mb-2 font-mono">Rs {{ number_format($rel['primary_price']) }}</span>
+                            <h4 class="text-sm font-semibold text-slate-900 line-clamp-1">{{ $rel['name'] }}</h4>
+                            <span class="text-sm font-bold text-slate-950 block mb-2">Rs {{ number_format($rel['primary_price']) }}</span>
                         </a>
 
                         @if($relVariant && $rel['is_available'])
                             <button 
                                 type="button" 
                                 onclick="addToCart({{ $relVariant['id'] }}, {{ $currentCity->id }}, this)"
-                                class="w-full py-1.5 bg-slate-950 hover:bg-black text-white text-[11px] font-bold rounded-xl transition cursor-pointer active:scale-95"
+                                class="w-full py-1.5 bg-slate-900 hover:bg-black text-white text-xs font-semibold rounded-xl transition cursor-pointer active:scale-95"
                             >
-                                + ADD
+                                Add
                             </button>
                         @else
-                            <button disabled class="w-full py-1.5 bg-slate-100 text-slate-400 text-[10px] font-bold rounded-xl cursor-not-allowed">
+                            <button disabled class="w-full py-1.5 bg-slate-100 text-slate-400 text-xs font-semibold rounded-xl cursor-not-allowed">
                                 Out
                             </button>
                         @endif
@@ -299,11 +224,11 @@
         }
 
         document.querySelectorAll('.gallery-thumb-btn').forEach(btn => {
-            btn.classList.remove('border-amber-500');
+            btn.classList.remove('border-slate-900');
             btn.classList.add('border-slate-200');
         });
 
-        btnEl.classList.add('border-amber-500');
+        btnEl.classList.add('border-slate-900');
         btnEl.classList.remove('border-slate-200');
     }
 
@@ -317,25 +242,22 @@
 
         if (stock > 0) {
             stockEl.innerText = `In Stock (${stock} units)`;
-            stockEl.className = 'text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full';
+            stockEl.className = 'text-sm font-medium text-emerald-700';
             addBtn.disabled = false;
-            addBtn.innerHTML = `
-                <svg class="w-5 h-5 text-amber-400 inline mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-                + Add to Basket
-            `;
+            addBtn.innerText = 'Add to Basket';
         } else {
             stockEl.innerText = `Out of Stock in {{ $product['city_name'] }}`;
-            stockEl.className = 'text-xs font-bold text-rose-800 bg-rose-100 border border-rose-200 px-3 py-1 rounded-full';
+            stockEl.className = 'text-sm font-medium text-rose-700';
             addBtn.disabled = true;
             addBtn.innerText = 'Out of Stock';
         }
 
         document.querySelectorAll('.variant-btn').forEach(btn => {
-            btn.classList.remove('border-amber-500', 'bg-amber-50/70', 'ring-2', 'ring-amber-500/20');
+            btn.classList.remove('border-slate-900', 'bg-slate-50');
             btn.classList.add('border-slate-200');
         });
 
-        btnEl.classList.add('border-amber-500', 'bg-amber-50/70', 'ring-2', 'ring-amber-500/20');
+        btnEl.classList.add('border-slate-900', 'bg-slate-50');
         btnEl.classList.remove('border-slate-200');
     }
 
