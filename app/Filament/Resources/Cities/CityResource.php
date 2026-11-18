@@ -73,6 +73,21 @@ class CityResource extends Resource
                     ->required()
                     ->numeric()
                     ->default(40),
+                TextInput::make('rider_base_pay')
+                    ->label('Rider Base Pay (Rs)')
+                    ->numeric()->minValue(0)->prefix('Rs')->default(50)
+                    ->helperText('What a rider is offered when an order first appears on the offer board.'),
+                TextInput::make('rider_pay_boost')
+                    ->label('Rider Pay Boost (Rs)')
+                    ->numeric()->minValue(0)->prefix('Rs')->default(10)
+                    ->helperText('Added to the offer each interval nobody accepts it.'),
+                TextInput::make('rider_pay_max')
+                    ->label('Rider Maximum Pay (Rs)')
+                    ->numeric()->minValue(0)->prefix('Rs')->default(100)
+                    ->helperText('Boosts stop here; staff are alerted to assign a rider manually.'),
+                TextInput::make('offer_boost_minutes')
+                    ->label('Boost Interval (minutes)')
+                    ->numeric()->integer()->minValue(1)->default(2),
                 TextInput::make('free_delivery_minimum')
                     ->label('Free Delivery Minimum (Rs)')
                     ->numeric()
