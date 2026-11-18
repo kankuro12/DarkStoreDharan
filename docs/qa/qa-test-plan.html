@@ -1,0 +1,641 @@
+<title>DarkStore QA Test Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: sticky toolbar; one reading column grouped Panel → Section → Action, each action a checkable row. */
+:root {
+  --bg: #f6f7f5;
+  --surface: #ffffff;
+  --fg: #16201b;
+  --muted: #5b6a62;
+  --line: #dde3df;
+  --accent: #0f7a52;
+  --accent-soft: #e2f3eb;
+  --pass: #0f7a52;
+  --fail: #c0362c;
+  --blocked: #b26a00;
+  --pass-bg: #e2f3eb;
+  --fail-bg: #fbe6e3;
+  --blocked-bg: #fdf0dc;
+  --p1: #c0362c;
+  --p2: #b26a00;
+  --p3: #5b6a62;
+  --panel-band: #16201b;
+  --panel-ink: #f6f7f5;
+  --code-bg: #eef1ef;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #101512; --surface: #171e1a; --fg: #e4ebe7; --muted: #95a59c; --line: #2a342f;
+    --accent: #4cc48f; --accent-soft: #173326; --pass: #4cc48f; --fail: #f07a6f; --blocked: #e8a94a;
+    --pass-bg: #173326; --fail-bg: #3a1c19; --blocked-bg: #3a2b14; --p1: #f07a6f; --p2: #e8a94a; --p3: #95a59c;
+    --panel-band: #e4ebe7; --panel-ink: #101512; --code-bg: #1f2823;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #101512; --surface: #171e1a; --fg: #e4ebe7; --muted: #95a59c; --line: #2a342f;
+  --accent: #4cc48f; --accent-soft: #173326; --pass: #4cc48f; --fail: #f07a6f; --blocked: #e8a94a;
+  --pass-bg: #173326; --fail-bg: #3a1c19; --blocked-bg: #3a2b14; --p1: #f07a6f; --p2: #e8a94a; --p3: #95a59c;
+  --panel-band: #e4ebe7; --panel-ink: #101512; --code-bg: #1f2823;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 980px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+header.top { padding-block: 32px 20px; }
+h1 { font-size: 1.9rem; line-height: 1.15; margin: 0 0 8px; text-wrap: balance; letter-spacing: -0.01em; }
+h2 { font-size: 1.4rem; margin: 0; text-wrap: balance; }
+h3 { font-size: 1.05rem; margin: 0; text-wrap: balance; }
+h4 { font-size: 0.98rem; margin: 0; }
+p { margin: 0; }
+.lede { color: var(--muted); max-width: 70ch; }
+code, .mono { font-family: var(--font-mono); font-size: 0.86em; }
+code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px; overflow-wrap: anywhere; }
+.meta { display: flex; flex-wrap: wrap; gap: 8px 20px; margin-top: 14px; color: var(--muted); font-size: 0.85rem; }
+
+.toolbar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-bottom: 1px solid var(--line); }
+.toolbar .wrap { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: center; padding-block: 10px; }
+.progress { flex: 1 1 240px; min-width: 0; }
+.bar { height: 8px; border-radius: 99px; background: var(--line); overflow: hidden; display: flex; }
+.bar span { display: block; height: 100%; }
+.bar .s-pass { background: var(--pass); } .bar .s-fail { background: var(--fail); } .bar .s-blocked { background: var(--blocked); }
+.counts { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 0.8rem; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.counts b { color: var(--fg); font-weight: 600; }
+.controls { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+input[type="search"], select { font: inherit; font-size: 0.85rem; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); max-width: 100%; }
+input[type="search"] { width: 170px; }
+button { font: inherit; cursor: pointer; }
+.btn { font-size: 0.82rem; font-weight: 600; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.intro { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; padding-block: 20px 8px; }
+.box { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; min-width: 0; }
+.box ul { margin: 6px 0 0; padding-left: 18px; }
+.box li { margin: 3px 0; }
+.box h3 { margin-bottom: 4px; }
+.table-scroll { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: 0.85rem; }
+th, td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+
+nav.toc { padding-block: 14px; }
+.toc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px 20px; margin-top: 10px; }
+.toc-grid h4 a { color: var(--fg); text-decoration: none; }
+.toc-grid ul { list-style: none; margin: 4px 0 0; padding: 0; font-size: 0.86rem; }
+.toc-grid li { margin: 2px 0; }
+.toc-grid li a { color: var(--muted); text-decoration: none; }
+.toc-grid a:hover { color: var(--accent); text-decoration: underline; }
+.tc { color: var(--muted); font-size: 0.76rem; font-variant-numeric: tabular-nums; }
+
+.panel-head { background: var(--panel-band); color: var(--panel-ink); margin-top: 34px; scroll-margin-top: 80px; }
+.panel-head .wrap { padding-block: 18px; display: flex; flex-wrap: wrap; gap: 4px 18px; align-items: baseline; justify-content: space-between; }
+.panel-head .who { font-size: 0.86rem; opacity: 0.8; }
+.panel-head .url { font-family: var(--font-mono); font-size: 0.82rem; opacity: 0.85; }
+
+section.sec { padding-block: 22px 4px; scroll-margin-top: 80px; }
+.sec-head { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: baseline; justify-content: space-between; border-bottom: 2px solid var(--fg); padding-bottom: 6px; }
+.sec-head .where { color: var(--muted); font-size: 0.82rem; }
+.sec-note { color: var(--muted); font-size: 0.88rem; margin: 6px 0 2px; max-width: 75ch; }
+
+.case { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px 16px; padding: 13px 0; border-bottom: 1px solid var(--line); }
+.case[data-status="pass"] { box-shadow: inset 3px 0 0 var(--pass); padding-left: 12px; }
+.case[data-status="fail"] { box-shadow: inset 3px 0 0 var(--fail); padding-left: 12px; }
+.case[data-status="blocked"] { box-shadow: inset 3px 0 0 var(--blocked); padding-left: 12px; }
+.case-title { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; }
+.cid { font-family: var(--font-mono); font-size: 0.76rem; color: var(--muted); }
+.prio { font-size: 0.66rem; font-weight: 700; letter-spacing: 0.05em; padding: 1px 6px; border-radius: 4px; border: 1px solid currentColor; }
+.prio.P1 { color: var(--p1); } .prio.P2 { color: var(--p2); } .prio.P3 { color: var(--p3); }
+.case-body { margin-top: 6px; font-size: 0.9rem; min-width: 0; }
+.lbl { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-top: 7px; }
+.case-body ol { margin: 2px 0 0; padding-left: 20px; }
+.case-body li { margin: 2px 0; }
+.expected { background: var(--accent-soft); border-radius: 6px; padding: 6px 10px; margin-top: 3px; }
+.status { display: flex; gap: 4px; align-items: flex-start; }
+.status button { font-size: 0.75rem; font-weight: 600; padding: 4px 9px; border-radius: 5px; border: 1px solid var(--line); background: var(--surface); color: var(--muted); }
+.status button[aria-pressed="true"].pass { background: var(--pass-bg); color: var(--pass); border-color: var(--pass); }
+.status button[aria-pressed="true"].fail { background: var(--fail-bg); color: var(--fail); border-color: var(--fail); }
+.status button[aria-pressed="true"].blocked { background: var(--blocked-bg); color: var(--blocked); border-color: var(--blocked); }
+.note-input { grid-column: 1 / -1; width: 100%; font: inherit; font-size: 0.85rem; padding: 6px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--bg); color: var(--fg); }
+.empty { color: var(--muted); padding: 30px 0; text-align: center; }
+footer { color: var(--muted); font-size: 0.84rem; padding-block: 34px 44px; }
+footer p + p { margin-top: 8px; }
+.toast { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); background: var(--fg); color: var(--bg); padding: 8px 14px; border-radius: 6px; font-size: 0.85rem; opacity: 0; transition: opacity .2s; pointer-events: none; }
+.toast.show { opacity: 1; }
+textarea.copy-fallback { width: 100%; height: 170px; font-family: var(--font-mono); font-size: 0.8rem; margin-top: 10px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+@media (max-width: 560px) { .case { grid-template-columns: minmax(0, 1fr); } h1 { font-size: 1.5rem; } }
+@media (prefers-reduced-motion: reduce) { .toast { transition: none; } }
+</style>
+
+<header class="top wrap">
+  <h1>DarkStore QA Test Plan</h1>
+  <p class="lede">Every screen and every button in DarkStore, written as simple checks: what to do, and what you should see. It covers the customer website, the admin panel, the warehouse floor screen, the rider app and the supplier portal, including every sign-up, sign-in, sign-out and password reset. Tick Pass, Fail or Blocked as you go.</p>
+  <div class="meta"><span>Version: main @ <span class="mono">1eb5742</span></span><span>18 November 2026</span><span id="total-meta"></span></div>
+</header>
+
+<div class="toolbar">
+  <div class="wrap">
+    <div class="progress">
+      <div class="bar" aria-hidden="true"><span class="s-pass" id="bar-pass"></span><span class="s-fail" id="bar-fail"></span><span class="s-blocked" id="bar-blocked"></span></div>
+      <div class="counts" id="counts" aria-live="polite"></div>
+    </div>
+    <div class="controls">
+      <input type="search" id="f-search" placeholder="Search checks" aria-label="Search checks">
+      <select id="f-panel" aria-label="Show one panel"><option value="">All panels</option></select>
+      <select id="f-prio" aria-label="Filter by priority"><option value="">All priorities</option><option value="P1">P1 must work</option><option value="P2">P2 important</option><option value="P3">P3 nice to have</option></select>
+      <select id="f-status" aria-label="Filter by result"><option value="">All results</option><option value="todo">Not checked yet</option><option value="pass">Pass</option><option value="fail">Fail</option><option value="blocked">Blocked</option></select>
+      <button class="btn primary" id="copy-btn" type="button">Copy results</button>
+      <button class="btn" id="reset-btn" type="button">Start over</button>
+    </div>
+  </div>
+</div>
+
+<main>
+  <div class="wrap">
+    <div id="reset-confirm" class="box" hidden style="margin-top:16px">
+      <p><strong>Clear every tick and note on this page?</strong> This can't be undone.</p>
+      <div class="controls" style="margin-top:10px"><button class="btn primary" id="reset-yes" type="button">Yes, clear everything</button><button class="btn" id="reset-no" type="button">No, keep them</button></div>
+    </div>
+    <div id="copy-fallback-wrap" hidden></div>
+
+    <div class="intro">
+      <div class="box">
+        <h3>How to use this page</h3>
+        <ul>
+          <li>Work through one panel at a time. Use the <em>All panels</em> menu above to show just one.</li>
+          <li>Read <strong>Steps</strong>, do them, then compare with <strong>You should see</strong>.</li>
+          <li>Click <strong>Pass</strong> if it matches. Click <strong>Fail</strong> if it doesn't and write what happened in the note box. Click <strong>Blocked</strong> if you couldn't try it, and say why.</li>
+          <li>Your ticks are saved in your own browser. When you finish, press <strong>Copy results</strong> and paste them into your report.</li>
+          <li><strong>P1</strong> = must work (money, stock, privacy, core flow). <strong>P2</strong> = important. <strong>P3</strong> = looks and wording.</li>
+        </ul>
+      </div>
+      <div class="box">
+        <h3>Test accounts</h3>
+        <p class="lede" style="font-size:0.85rem">Demo accounts on the test site. Password for all: <code>password</code></p>
+        <div class="table-scroll" style="margin-top:6px">
+          <table>
+            <thead><tr><th>Role</th><th>Sign in with</th><th>Address</th></tr></thead>
+            <tbody>
+              <tr><td>Super admin</td><td class="mono">admin@darkstore.np</td><td class="mono">/admin</td></tr>
+              <tr><td>Warehouse manager</td><td class="mono">dharan.manager@darkstore.np</td><td class="mono">/admin</td></tr>
+              <tr><td>Picker / packer</td><td class="mono">picker@darkstore.np</td><td class="mono">/admin</td></tr>
+              <tr><td>Customer</td><td class="mono">customer@darkstore.np</td><td class="mono">/login</td></tr>
+              <tr><td>Rider (approved)</td><td class="mono">rider.approved@darkstore.np</td><td class="mono">/rider</td></tr>
+              <tr><td>Rider (other stages)</td><td class="mono">rider.draft / rider.submitted / rider.needs_changes @darkstore.np</td><td class="mono">/rider</td></tr>
+              <tr><td>Supplier (approved)</td><td class="mono">vendor.approved@darkstore.np</td><td class="mono">/vendor</td></tr>
+              <tr><td>Supplier (other stages)</td><td class="mono">vendor.draft / vendor.submitted / vendor.needs_changes @darkstore.np</td><td class="mono">/vendor</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="box">
+        <h3>Before you start</h3>
+        <ul>
+          <li>Only test on the <strong>test site</strong>, never the live shop. Orders and payments on the live shop are real.</li>
+          <li>Ask the developer to: load fresh demo data, turn on <em>test SMS</em> (texts are written to a log they can read to you), turn on <em>test signup code</em> (rider and supplier signup code is <code>123456</code>), and connect eSewa, Khalti and Fonepay <em>sandbox</em> accounts.</li>
+          <li>Keep a phone or a narrow browser window (about 375px wide) ready: the shop and rider app must work on phones.</li>
+          <li>Use two different browsers (or one normal and one private window) when a check needs two people at once.</li>
+        </ul>
+      </div>
+    </div>
+
+    <nav class="toc" aria-label="Contents">
+      <h2>Contents</h2>
+      <div class="toc-grid" id="toc"></div>
+    </nav>
+  </div>
+
+  <div id="panels"></div>
+  <div class="wrap"><p class="empty" id="no-results" hidden>No checks match these filters.</p></div>
+</main>
+
+<footer class="wrap">
+  <p><strong>Business rules used in this plan:</strong> cash on delivery up to Rs 15,000; customers can cancel until the order is packed; returns within 24 hours for fresh/perishable items and 7 days for packaged goods; riders must be 18 or older; rider pay starts at Rs 50, rises Rs 10 every 2 minutes, up to Rs 100; a rider can hold at most 2 unfinished deliveries.</p>
+  <p>If the app does something different from this plan and you're not sure which is right, ask the product owner before filing a bug.</p>
+</footer>
+
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+// PANELS → sections → actions: [id, priority, action name, setup ("" if none), steps[], you should see]
+const PANELS = [
+{ id: "shop", name: "Customer website", who: "Shoppers", url: "/", sections: [
+  { id: "shop-city", name: "Choosing a city", where: "Home page, header city button", actions: [
+    ["S-01","P1","Pick a city on first visit","Use a private window so nothing is remembered.",["Open the home page."],"A box asks you to choose your delivery city and lists each city with its delivery time. Picking one closes the box and shows that city's products."],
+    ["S-02","P1","Change city from the header","A city already chosen.",["Click the city button next to the logo.","Choose a different city."],"A green message confirms the switch. Products and prices change to the new city's."],
+    ["S-03","P1","Basket is checked when you change city","An item in your basket that the other city doesn't sell.",["Change city."],"That item is removed or marked unavailable, and the total updates."]
+  ]},
+  { id: "shop-browse", name: "Home page & browsing", where: "Home page", actions: [
+    ["S-04","P2","Banner slideshow","The test city has 3 banners.",["Look at the banner at the top.","Wait 5 seconds.","Click the third dot."],"Each banner fills the full width with no empty gap beside it. It moves to the next banner every 5 seconds. Dots at the bottom show which banner you're on, and clicking a dot jumps to it."],
+    ["S-05","P3","Slideshow pauses when you point at it","3 banners.",["Hold the mouse over the banner (or touch it on a phone) for 10 seconds."],"It stays still while you're on it and starts moving again when you leave."],
+    ["S-06","P1","Category tabs","",["Click each category tab under the banner."],"Only that category's products show, and the number on each tab matches."],
+    ["S-07","P1","Search","",["Type part of a product name in the search box (e.g. noodles).","Search for nonsense like zzzz."],"Matching products appear. Nonsense shows a friendly 'nothing found' message."],
+    ["S-08","P2","Popup message","Admin has made a popup for all pages, shown once.",["Open the home page.","Close the popup with Close, then reload."],"The popup appears shortly after the page loads. It closes with the Close button, the X, the Escape key or a click outside, and doesn't come back after reload."],
+    ["S-09","P2","Popup button link","The popup has a button.",["Click the popup's button."],"It opens the page it points to."]
+  ]},
+  { id: "shop-product", name: "Product page", where: "Click any product", actions: [
+    ["S-10","P1","View a product","",["Open a product."],"You see its photos, name, description and price for your city."],
+    ["S-11","P1","Choose a pack size","A product with 2 or more pack sizes.",["Switch between pack sizes."],"The price changes to match the pack size."],
+    ["S-12","P1","Add to basket from the product page","",["Choose a size and press Add."],"The basket count in the header goes up."],
+    ["S-13","P1","Out of stock product","A product with no stock in your city.",["Open it."],"It says out of stock and you can't add it."],
+    ["S-14","P1","Supplier stays hidden","A product supplied by an outside supplier.",["Look all over the product page, basket and checkout."],"No supplier name or supplier price appears anywhere."],
+    ["S-15","P3","Share a product","",["Use the share link and open it in another browser."],"It opens the same product page."]
+  ]},
+  { id: "shop-basket", name: "Basket", where: "Bag button in the header", actions: [
+    ["S-16","P1","Change quantity","2 items in the basket.",["Press + on one item and - on another."],"Quantities, line totals and the grand total update correctly."],
+    ["S-17","P1","Remove an item","",["Remove an item."],"It disappears and the total drops."],
+    ["S-18","P1","Can't order more than in stock","A product with only 3 in stock.",["Try to set the quantity to 5."],"You're stopped at 3, or see a clear message."],
+    ["S-19","P1","Apply a coupon","Admin has made a coupon (e.g. 10% off).",["Type the code and apply it."],"The discount shows and the total drops by the right amount."],
+    ["S-20","P1","Coupon that shouldn't work","Coupons that are expired, not started, used up, for another city, or need a bigger basket.",["Apply each one."],"Each is refused with a clear reason."],
+    ["S-21","P2","Remove a coupon","A coupon applied.",["Remove it."],"The total goes back to normal."],
+    ["S-22","P2","Basket survives a reload","Items in the basket.",["Reload the page and visit other pages."],"The basket still has the same items."]
+  ]},
+  { id: "shop-checkout", name: "Checkout", where: "Basket → Checkout", note: "The Area / Chowk / Ward must be picked from a list made by admin. Customers can't type their own, except in cities where admin hasn't added any areas yet.", actions: [
+    ["S-23","P1","Must sign in to check out","Signed out, items in basket.",["Press Checkout."],"You're asked to sign in, then brought back to checkout with your basket."],
+    ["S-24","P1","Pick Area / Chowk / Ward from the list","City with areas set up (Dharan).",["Look at the Area / Chowk / Ward field.","Try to place the order without choosing one."],"It's a dropdown that starts with 'Choose your area', and each option shows its delivery fee and time. There's no box to type in. You can't continue without choosing."],
+    ["S-25","P2","Typed area in a city without areas","City with no areas set up (Itahari).",["Open checkout in that city."],"Area / Chowk / Ward is a box you type in, and it's required."],
+    ["S-26","P1","Delivery fee follows the chosen area","Two areas with different fees.",["Choose each area and compare the totals."],"The delivery fee matches the area you chose."],
+    ["S-27","P1","Free delivery","Admin rule: free delivery above Rs 1,000.",["Check out a basket just under Rs 1,000, then just over."],"Under pays delivery; over gets free delivery with the reason shown."],
+    ["S-28","P1","Use a saved address","A saved address in this city.",["Choose the saved address."],"You don't have to type the address again."],
+    ["S-29","P2","Delivery instructions","",["Tap 'Leave at doorstep' and 'Do not ring bell'."],"Both are added to the instructions box."],
+    ["S-30","P1","Place a cash on delivery order","",["Choose Cash on Delivery and place the order."],"You see the order tracking page with an order number."],
+    ["S-31","P1","Cash on delivery limit","",["Try cash on delivery for a basket over Rs 15,000."],"Cash on delivery isn't allowed; you're asked to pay online."],
+    ["S-32","P1","Pay with eSewa (sandbox)","",["Choose eSewa, place the order, complete payment on eSewa."],"You return to the shop and the order shows as paid."],
+    ["S-33","P1","Pay with Khalti and Fonepay (sandbox)","",["Repeat with Khalti, then Fonepay."],"Same as eSewa for each."],
+    ["S-34","P1","Leave an online payment unfinished","",["Start eSewa payment and close the window.","Check again after 30 minutes."],"The order stays unpaid and the items go back into stock."],
+    ["S-35","P2","Order confirmation text","Test SMS on.",["Place an order and ask the developer to check the SMS log."],"A text with the tracking link was sent to the customer's number."]
+  ]},
+  { id: "shop-track", name: "Order tracking, cancel & returns", where: "Tracking page", actions: [
+    ["S-36","P1","Follow your order","A new order.",["Open the tracking page while staff move the order along."],"Each step appears: confirmed, packing, ready, out for delivery, delivered."],
+    ["S-37","P1","Cancel an order","An order that hasn't been packed.",["Press Cancel order."],"The order is cancelled."],
+    ["S-38","P1","Can't cancel after packing","An order that's been packed.",["Look for Cancel order."],"It's not there."],
+    ["S-39","P1","Ask for a return","A delivered order.",["Press request return, choose a reason, add details, send."],"You see the return was received."],
+    ["S-40","P1","Return too late","A fresh item delivered more than 24 hours ago, or a packaged item more than 7 days ago.",["Try to request a return."],"You're told it's past the return time."],
+    ["S-41","P1","Other people's orders stay private","Two customer accounts.",["Signed in as customer B, open customer A's tracking link."],"B can't see A's details or cancel A's order."]
+  ]},
+  { id: "shop-auth", name: "Sign up, sign in & passwords", where: "/register, /login, /forgot-password", actions: [
+    ["S-42","P1","Create an account with email","",["Open Register, fill in name, email, password, confirm, submit."],"You're signed in and your name shows in the header."],
+    ["S-43","P1","Sign up with an email already used","",["Register again with the same email."],"Refused with a clear message."],
+    ["S-44","P1","Sign in with email and password","",["Open Login → Email & Password tab, sign in."],"You're signed in."],
+    ["S-45","P1","Wrong password","",["Sign in with a wrong password."],"Refused with a clear message. Your email stays filled in."],
+    ["S-46","P1","Sign in with mobile number","Test SMS on.",["Open Login → phone tab, enter your number, press Send code, enter the code."],"You're signed in. A brand new number creates a new account."],
+    ["S-47","P1","Wrong or old code","",["Enter a wrong code a few times; then try a code that already worked once."],"Wrong codes are refused and after several tries you're told to wait. An old code doesn't work again."],
+    ["S-48","P1","Test code doesn't work for customers","Test signup code turned on.",["Try signing in by phone with 123456."],"Refused. The test code only works for rider and supplier signup."],
+    ["S-49","P2","Sign in with Google","Google sign-in set up on the test site.",["Press Continue with Google and finish."],"You come back signed in."],
+    ["S-50","P1","Reset password by email","",["Login → Forgot password → email tab, send link, open the link, set a new password."],"The new password works and the old one doesn't."],
+    ["S-51","P1","Reset password by phone","Test SMS on.",["Forgot password → phone tab, send code, enter code and new password."],"Same as by email."],
+    ["S-52","P2","Too many tries","",["Press sign in more than 10 times in one minute."],"You're asked to wait before trying again."],
+    ["S-53","P1","Sign out","Signed in.",["Press Sign out."],"You're signed out; account pages ask you to sign in."]
+  ]},
+  { id: "shop-account", name: "My account", where: "Account menu", actions: [
+    ["S-54","P2","See past orders","An account with orders.",["Open My Orders."],"Your orders show with date, total and status."],
+    ["S-55","P2","Reorder in one tap","A past order.",["Press Reorder."],"Those items go back into your basket. Anything no longer sold is skipped with a message."],
+    ["S-56","P1","Add an address","",["Addresses → Add New Address. Pick city Dharan, then look at Area / Chowk / Ward. Fill in the rest and save."],"For Dharan, Area / Chowk / Ward is a required dropdown. The address saves."],
+    ["S-57","P2","Address for a city without areas","",["Add an address and choose Itahari."],"Area / Chowk / Ward becomes a box you type in."],
+    ["S-58","P2","Edit an address","A saved address.",["Press Edit, change something, save."],"The change is saved."],
+    ["S-59","P2","Delete an address","A saved address.",["Press Delete."],"It's removed."]
+  ]},
+  { id: "shop-pages", name: "Help, legal & contact pages", where: "Footer links", actions: [
+    ["S-60","P2","Help & How-to page","",["Open Help & How-to from the footer and click each topic button."],"Each button jumps to its section: how to order, delivery, payments, cancel & return, account, become a rider, supply products, still need help."],
+    ["S-61","P2","Become a rider / supplier links","",["Click every sign-up and sign-in link on the help page and in the footer's Work With Us list."],"They open rider sign-up, rider sign-in, supplier sign-up and supplier sign-in."],
+    ["S-62","P2","Privacy policy","",["Open Privacy Policy and check the contact email and contents list."],"The email is privacy@ followed by the test site's own address. There are 16 numbered sections, with Technical measures under section 8."],
+    ["S-63","P3","Terms of Service and Contact","",["Open both pages."],"They load with correct shop name and details."],
+    ["S-64","P2","Pages on a phone","Phone or 375px window.",["Open the home, help, privacy and checkout pages."],"Nothing runs off the side of the screen and you never scroll sideways."]
+  ]}
+]},
+{ id: "admin", name: "Admin panel", who: "Office staff", url: "/admin", sections: [
+  { id: "a-access", name: "Sign in & who can see what", where: "/admin", actions: [
+    ["A-01","P1","Staff sign in","",["Sign in as super admin."],"The admin dashboard opens with the menu on the left."],
+    ["A-02","P1","Customers can't get into admin","",["Try customer@darkstore.np at /admin."],"Refused."],
+    ["A-03","P1","Wrong password","",["Sign in with a wrong password."],"Refused with a message."],
+    ["A-04","P1","Sign out","Signed in.",["Open the user menu (top right) and sign out."],"You're back at the sign-in page."],
+    ["A-05","P1","Warehouse manager only sees their store","Sign in as dharan.manager.",["Open Orders, Inventory & Stock and Warehouse Floor Operations."],"Only the Dharan store's orders and stock are shown."],
+    ["A-06","P1","Warehouse manager can't open global settings","Same login.",["Look at the menu for Cities, Products, Settings, Riders, Delivery areas, Storefront popups."],"They're missing from the menu, and typing their address gives 'forbidden'."],
+    ["A-07","P2","Each job sees its own tools","Accounts with roles: delivery coordinator, catalog manager, finance.",["Sign in as each and look at the menu."],"Delivery coordinator can manage Riders. Catalog manager can manage Vendors and products. Finance can manage Vendor payouts. None sees what isn't theirs."],
+    ["A-08","P3","Dashboard numbers","",["Compare the dashboard figures with the Orders list."],"They match."],
+    ["A-09","P3","Admin manual","",["Open Admin Manual and click several contents links."],"Each link jumps to the right section."]
+  ]},
+  { id: "a-orders", name: "Orders", where: "Orders", actions: [
+    ["A-10","P1","Find orders","Several orders.",["Search by order number; filter by status, payment, city, store and date."],"The list shows only matching orders."],
+    ["A-11","P1","View an order","",["Open an order."],"Customer, address, area, items, delivery fee, rider pay, total and status history are shown."],
+    ["A-12","P1","Update Status","An order.",["Press Update Status, choose the next status, write a reason, save."],"The status changes and the history shows who changed it and why."],
+    ["A-13","P1","Cancel an order","A confirmed order.",["Press Cancel, write a reason, confirm."],"The order is cancelled and its items return to stock."],
+    ["A-14","P1","Assign a rider (Edit Rider / Notes)","An order without a rider.",["Press Edit Rider / Notes, choose a rider, save."],"The rider is set and Rider Pay shows an amount. The list only offers approved riders from the order's city."],
+    ["A-15","P1","Remove a rider","An order whose rider hasn't picked it up.",["Edit Rider / Notes, clear the rider, save."],"No rider and no rider pay; the order goes back to the riders' Offers screen."],
+    ["A-16","P2","Add an internal note","",["Edit Rider / Notes, type a note, save."],"The note is saved on the order."]
+  ]},
+  { id: "a-returns", name: "Return requests", where: "Return Requests", actions: [
+    ["A-17","P1","Review a return","A customer's return request.",["Press Review, approve it with a note."],"Status becomes approved."],
+    ["A-18","P1","Inspect & Restock","An approved return.",["Press Inspect & Restock, record the condition, choose whether to restock."],"Status becomes inspected; if restocked, the items are back in stock."],
+    ["A-19","P1","Process Refund","An inspected return.",["Press Process Refund, add notes."],"Status becomes refunded with the date."],
+    ["A-20","P2","Reject a return","A return request.",["Review it and reject with a reason."],"Status becomes rejected."]
+  ]},
+  { id: "a-catalog", name: "Products, categories & brands", where: "Products, Categories, Brands", actions: [
+    ["A-21","P1","Create a category and sub-category","",["Create a parent category, then a child with that parent."],"The child shows under the parent in the list and on the shop."],
+    ["A-22","P2","Edit and delete a category","",["Rename one; delete an empty one."],"Changes show on the shop."],
+    ["A-23","P2","Create, edit, delete a brand","",["Create a brand, rename it, delete it."],"Each works."],
+    ["A-24","P1","Create a product","",["New product: name, category, brand, main photo, extra photos, description, pack sizes (variants) with SKU, price and weight, city prices. Set active and save."],"It appears on the shop in cities that have a price, with its photos."],
+    ["A-25","P1","Edit a product","",["Change the price and a photo."],"The shop shows the new price and photo."],
+    ["A-26","P2","Hide a product","",["Set a product to inactive."],"It disappears from the shop."],
+    ["A-27","P1","Import products from a spreadsheet","A CSV file with products.",["Press Import Products and upload the file."],"Products and their pack sizes are created. Bad rows are listed; good rows still import."],
+    ["A-28","P2","Filter products","",["Filter by brand, category, status and supplier."],"Lists match."],
+    ["A-29","P1","Approve a supplier's product","A supplier product waiting for review.",["Open it, set city prices and photos, press Approve."],"It goes live on the shop. You can't approve before city prices are set."],
+    ["A-30","P1","Send a supplier product back","A supplier product waiting for review.",["Press Request changes and write what to fix."],"The supplier sees it needs changes along with your note."]
+  ]},
+  { id: "a-stock", name: "Inventory & stock", where: "Inventory & Stock, Stock Ledger", actions: [
+    ["A-31","P1","Adjust stock","",["On a row press Adjust Stock, enter +10 with a reason; then -3 with a reason."],"Stock goes up 10 then down 3."],
+    ["A-32","P1","Can't go below zero","A row with 2 in stock.",["Adjust by -5."],"Refused."],
+    ["A-33","P1","Transfer between stores","Two stores.",["Press Transfer, choose the other store, quantity 5."],"One store drops 5, the other gains 5."],
+    ["A-34","P2","Add stock to many rows at once","",["Tick several rows, choose Add Stock to Selected, enter a quantity."],"Each ticked row gains that quantity."],
+    ["A-35","P2","Add Stock button","",["Press Add Stock at the top, pick a product and quantity."],"Stock is added."],
+    ["A-36","P2","Low stock filter","Some items below their reorder level.",["Turn on Low stock only."],"Only low items show."],
+    ["A-37","P2","Ledger history for an item","",["Press Ledger on a row."],"Every change for that item is listed with who, when, why and the balance after."],
+    ["A-38","P2","Export and import stock","",["Press Export Stock CSV, change some quantities in the file, then Import Stock CSV."],"Stock updates to match the file, each change recorded in the ledger."],
+    ["A-39","P2","Stock Ledger page","",["Open Stock Ledger, filter by store, type, product and dates."],"Entries match. There's no edit or delete button."]
+  ]},
+  { id: "a-setup", name: "Cities, stores & delivery areas", where: "Cities, Warehouses, Delivery areas", actions: [
+    ["A-40","P1","Edit a city","",["Change delivery fee, free delivery minimum, delivery time, cash on delivery and online payment switches, assigned stores."],"The shop reflects each change for that city."],
+    ["A-41","P1","Rider pay settings","",["Edit Rider Base Pay, Rider Pay Boost, Rider Maximum Pay and Boost Interval. Try a boost interval of 0."],"Values save. An interval of 0 is refused."],
+    ["A-42","P2","Homepage banners","",["Add 3 banners (image link and target link), save, view the shop."],"The slideshow shows the 3 banners."],
+    ["A-43","P2","Featured products","",["Choose featured products for a city."],"They show on that city's home page."],
+    ["A-44","P2","Create a city","",["Add a new city and assign a store."],"It appears in the shop's city list."],
+    ["A-45","P2","Stores (warehouses)","",["Create a store and link it to a city."],"Orders for that city can be filled from it."],
+    ["A-46","P1","Add a delivery area","",["Delivery areas → Add area: city, name (e.g. Dharan-8, Bijayapur), delivery fee, time, minimum order, cash on delivery."],"It appears in that city's checkout and address dropdown."],
+    ["A-47","P2","Edit, hide and filter areas","",["Change an area's fee; set one to Hidden; filter the list by city."],"New fee used for new orders; hidden area gone from checkout; filter works."]
+  ]},
+  { id: "a-promo", name: "Coupons & free delivery", where: "Coupons, Free Delivery Matrix", actions: [
+    ["A-48","P1","Create a coupon","",["New coupon: code, city (or all), percent or fixed, value, minimum order, max discount, start and end dates, usage limit, active."],"It works on the shop as set (see S-19, S-20)."],
+    ["A-49","P2","Edit and switch off a coupon","",["Change the value; set it inactive."],"New value applies; inactive coupon is refused."],
+    ["A-50","P1","Usage counter","Coupon with usage limit 1.",["Use it on one order, then try another."],"The second is refused; the coupon shows it was used once."],
+    ["A-51","P1","Create a free delivery rule","",["New rule: name (shown to customers), city, minimum subtotal or minimum quantity, or a category or product."],"Baskets that meet it get free delivery with that name shown as the reason."],
+    ["A-52","P2","Switch off a free delivery rule","",["Set a rule inactive."],"It no longer applies."]
+  ]},
+  { id: "a-content", name: "Popups & settings", where: "Storefront popups, Settings", actions: [
+    ["A-53","P2","Create a popup for all pages","",["New popup: title, text, image, button label and link, placement All pages, frequency Once, active."],"It shows once on the shop (S-08)."],
+    ["A-54","P2","Popup for one product or one page","",["Make one for a single product, and one for page help*."],"Each shows only where it should; the more specific one wins over All pages."],
+    ["A-55","P2","Schedule a popup","",["Set Show from tomorrow; another with Show until yesterday."],"Neither shows today."],
+    ["A-56","P1","Unsafe popup content is blocked","",["Put <script>alert(1)</script> in the text and javascript:alert(1) as the button link."],"The text shows as plain words with no pop-up alert. The javascript link is refused."],
+    ["A-57","P2","Switch a popup on and off","",["Use the Active switch in the list."],"Off hides it from the shop straight away."],
+    ["A-58","P2","Store settings","",["Change the shop name or logo in Settings."],"The shop shows the change."]
+  ]},
+  { id: "a-riders", name: "Riders", where: "Riders", actions: [
+    ["A-59","P1","Status tabs","Riders at each stage.",["Click each tab: All, Draft, Pending review, Needs changes, Approved, Suspended, Rejected."],"Each tab lists only riders in that stage."],
+    ["A-60","P1","Start review","A submitted rider.",["Open the rider, press Start review."],"Status becomes under review."],
+    ["A-61","P1","View documents","A rider with documents.",["Open each document file; press Reveal number on one."],"Files open for allowed staff. Numbers are hidden until revealed, and each view is recorded."],
+    ["A-62","P1","Documents are private","",["Copy a document link, sign out (or sign in as picker) and open it."],"Refused."],
+    ["A-63","P1","Approve","A rider under review.",["Press Approve."],"Status Approved; the rider gets a text."],
+    ["A-64","P1","Request changes","A rider under review.",["Press Request changes and write a reason."],"Status Needs changes; the rider sees your reason."],
+    ["A-65","P1","Reject application","A rider under review.",["Press Reject application with a reason."],"Status Rejected; the rider sees the reason."],
+    ["A-66","P1","Mark training complete","An approved rider not yet trained.",["Press Mark training complete."],"They can now receive delivery offers (before this they get none)."],
+    ["A-67","P1","Suspend and Reactivate","An approved rider with an order not yet picked up.",["Press Suspend with a reason.","Later press Reactivate."],"Suspended: no offers, and the not-picked-up order goes back to the Offers board. Reactivated: offers again."],
+    ["A-68","P1","Block login / Allow login","",["Press Block login, try signing in as that rider; then Allow login."],"Blocked rider can't sign in; allowed rider can."],
+    ["A-69","P2","Text password reset link","",["Press Text password reset link."],"The rider receives a reset link by text."],
+    ["A-70","P2","Upload a document for the rider","",["Press Upload document, choose type, add file and dates."],"The document is added to the rider's list."],
+    ["A-71","P2","Edit rider details","",["Change bank details and save, then check Audit Logs."],"Saved; the audit log shows the change with the account number hidden."],
+    ["A-72","P2","Filter riders","",["Filter by city and vehicle type."],"Lists match."]
+  ]},
+  { id: "a-vendors", name: "Suppliers (vendors) & payouts", where: "Vendors, Vendor payouts", actions: [
+    ["A-73","P1","Add vendor","",["Press Add vendor and fill in the details."],"The supplier is created."],
+    ["A-74","P1","Review a supplier","A submitted supplier.",["Start review, view documents, then Approve (try Request changes and Reject application on others)."],"Each works like the rider version (A-60 to A-65)."],
+    ["A-75","P1","Suspend, reactivate, block and allow login","An approved supplier.",["Try each button."],"Supplier access changes accordingly."],
+    ["A-76","P2","Filter suppliers","",["Filter by business type and city; use the status tabs."],"Lists match."],
+    ["A-77","P1","Record payout","A supplier with deliveries owed.",["Vendor payouts → Record payout: supplier, amount, period from/to, bank or wallet reference, paid on."],"The payout is listed and the supplier's balance drops by that amount."]
+  ]},
+  { id: "a-location", name: "Location requests & audit logs", where: "Location requests, Audit Logs", actions: [
+    ["A-78","P1","Approve a location request","A rider or supplier asked to move.",["Press Approve."],"Their city/hub or pickup location changes to the new one; they get a text."],
+    ["A-79","P1","Reject a location request","",["Press Reject with a reason."],"Nothing changes; they get the reason by text."],
+    ["A-80","P2","Audit logs","After doing other admin checks.",["Open Audit Logs and look through."],"You can see order changes, stock moves, rider offer accepts, manual rider assignments, approvals and admin edits, each with who and when."]
+  ]}
+]},
+{ id: "floor", name: "Warehouse floor screen", who: "Pickers, packers, store managers", url: "/admin → Warehouse Floor Operations", sections: [
+  { id: "w-flow", name: "Pick, pack & dispatch", where: "Warehouse Floor Operations", actions: [
+    ["W-01","P2","Choose a store","Super admin (managers are fixed to their store).",["Pick a store from the store menu."],"The columns show that store's orders."],
+    ["W-02","P1","Start picking","A new order in the New column.",["Press the start button on the card."],"The card moves to the picking column."],
+    ["W-03","P1","Finish packing","An order being picked.",["Press finish packing."],"The card moves to the packed column."],
+    ["W-04","P1","Mark ready","A packed order.",["Press mark ready."],"The card moves to Ready (STAGED)."],
+    ["W-05","P1","Dispatch to rider","A ready order with a rider.",["Press Dispatch to Rider."],"The card moves to the out-for-delivery column with the rider's name."],
+    ["W-06","P2","Scan a barcode","",["Type or scan a product code in the scan box; then an unknown code."],"The product is found; an unknown code shows a clear message."]
+  ]},
+  { id: "w-offers", name: "Rider offers on the floor screen", where: "Order cards", note: "When picking starts, the order is offered to all online riders in the city. The first rider to accept gets it.", actions: [
+    ["W-07","P1","Offer starts with picking","An order with no rider.",["Press start picking."],"The card shows 'Offer Rs 50 · waiting 0 min' and the order appears on riders' Offers screen."],
+    ["W-08","P1","Offer pay goes up","",["Leave it for 4 minutes and refresh."],"It shows Rs 70."],
+    ["W-09","P1","'Assign manually' warning","No rider accepts.",["Wait 12 minutes and refresh."],"A red 'No rider at max pay — assign manually' badge appears."],
+    ["W-10","P1","Rider accepted shows on the card","A rider accepts on their phone.",["Refresh the floor screen."],"The card shows the rider's name and their pay."],
+    ["W-11","P1","Dispatch keeps the rider who accepted","",["Dispatch an order a rider has accepted."],"It goes to that rider, not someone else."],
+    ["W-12","P1","Choose a rider yourself","A ready order nobody accepted.",["Choose a rider in the card's dropdown and press Dispatch."],"That rider gets the order with the current pay."],
+    ["W-13","P1","Old screen can't steal an accepted order","Two windows.",["Window 1: choose rider B in the dropdown but don't press Dispatch.","Rider A accepts on their phone.","Window 1: press Dispatch."],"A warning says a rider already accepted, naming rider A. The order stays with A."]
+  ]}
+]},
+{ id: "rider", name: "Rider app", who: "Delivery riders", url: "/rider", sections: [
+  { id: "r-auth", name: "Sign up, sign in & passwords", where: "/rider/register, /rider/login", actions: [
+    ["R-01","P1","Sign up as a rider","Test signup code on.",["Open /rider/register. Enter name, mobile, email, password, city and vehicle type. Press Send code, enter 123456, submit."],"Account is created and the verification steps open."],
+    ["R-02","P1","Sign up with a wrong code","",["Enter a wrong code."],"Refused."],
+    ["R-03","P1","Sign up with a mobile already used","",["Register again with the same mobile."],"Refused with a message."],
+    ["R-04","P1","Sign in with mobile or email","",["Sign in with the mobile number, sign out, sign in with the email."],"Both work."],
+    ["R-05","P1","Wrong password","",["Sign in with a wrong password."],"Refused."],
+    ["R-06","P1","Forgot password","",["Press Forgot password, enter email, open the link, set a new password."],"The new password works."],
+    ["R-07","P1","Sign out","",["Press Sign out."],"Back at the sign-in page."],
+    ["R-08","P1","Rider login is separate","Signed in as a rider.",["Open /admin and /vendor in the same browser."],"You're not signed in there."]
+  ]},
+  { id: "r-verify", name: "Verification steps", where: "Verification (shown after sign-up)", actions: [
+    ["R-09","P1","Personal details","rider.draft account.",["Fill in full name, date of birth, gender, permanent address (province, district, municipality, ward, tole), temporary address if different, emergency contact."],"Each required field is checked before you can go on."],
+    ["R-10","P1","Under 18 is refused","",["Enter a date of birth less than 18 years ago."],"Refused with an age message."],
+    ["R-11","P1","Identity","",["Upload citizenship or national ID (front and back), number, issue date, district, and a profile photo."],"Uploads are accepted and shown."],
+    ["R-12","P1","Vehicle (scooter or motorcycle)","Vehicle type: motorcycle.",["Enter license category and dates, bluebook with registration number, insurance with company and expiry."],"All are required."],
+    ["R-13","P1","Vehicle step skipped for bicycles","Vehicle type: bicycle.",["Go through the steps."],"No license, bluebook or insurance is asked for."],
+    ["R-14","P1","Hub & payout","",["Choose your home hub (store), base location, and how you want to be paid: bank (with proof) or eSewa/Khalti ID."],"Bank needs bank details and proof; wallet needs the wallet ID."],
+    ["R-15","P1","Review & agree, then submit","",["Read the agreement, tick 'I have read and agree', press Submit for verification."],"Status becomes submitted and the status page explains what happens next."],
+    ["R-16","P1","Can't skip ahead while waiting","Submitted rider.",["Try opening Offers or My Deliveries."],"You're sent to the account status page."],
+    ["R-17","P1","Fix what was asked","rider.needs_changes account.",["Open verification."],"Only the documents that were rejected can be changed. Everything else is locked. Resubmit works."]
+  ]},
+  { id: "r-status", name: "Account status & moving", where: "Account status, Request location change", actions: [
+    ["R-18","P2","Account status page","Riders at each stage.",["Open Account status."],"It explains the current stage, shows admin's reason if any, and lists document expiry dates."],
+    ["R-19","P1","Upload renewed document","A rider with an expired document.",["Press Upload renewed document, upload the new one with its new expiry."],"The document is replaced; once checked, the rider can work again."],
+    ["R-20","P2","Ask to move city or hub","Approved rider.",["Request location change: choose new city, hub, location, and reason."],"Request is sent; admin sees it in Location requests."]
+  ]},
+  { id: "r-offers", name: "Offers", where: "Offers (home screen after approval)", actions: [
+    ["R-21","P1","Go online and offline","Approved, trained rider.",["Press Go online; then Go offline."],"Online shows offers. Offline shows 'Go online to see delivery offers'."],
+    ["R-22","P1","See an offer","An order being picked in your city.",["Look at the Offers screen."],"The card shows the store, drop-off area, number of items, cash to collect (for cash orders), rough distance and pay. No customer name, phone or street is shown."],
+    ["R-23","P1","Only your city's offers","Riders in two cities.",["Compare both riders' Offers screens."],"Each sees only their own city's orders."],
+    ["R-24","P1","Accept an offer","",["Press Accept."],"'Order accepted' appears and you move to My Deliveries, where the order shows 'Earning Rs …'."],
+    ["R-25","P1","Two riders press Accept together","Two phones, same offer.",["Both press Accept at the same moment."],"Only one gets it. The other sees 'Already taken or not available'."],
+    ["R-26","P1","No more than 2 at a time","A rider with 2 unfinished deliveries.",["Accept a third offer."],"Refused."],
+    ["R-27","P2","Decline an offer","",["Press Decline.","Wait until the pay goes up (2 minutes)."],"The offer disappears, then comes back with the higher pay."],
+    ["R-28","P1","Can't go offline mid-delivery","A rider with an accepted order.",["Press Go offline."],"Refused with 'Finish or hand back your current deliveries before going offline'."],
+    ["R-29","P2","New offers appear by themselves","Offers screen open.",["Staff start picking a new order; wait 10 seconds."],"The new offer appears without refreshing."]
+  ]},
+  { id: "r-deliveries", name: "My Deliveries", where: "My Deliveries", actions: [
+    ["R-30","P1","See full delivery details after accepting","An accepted order.",["Open My Deliveries."],"Now you see the customer's name, full address, phone, items and payment."],
+    ["R-31","P1","Picked Up","",["Press Picked Up."],"Status changes to picked up."],
+    ["R-32","P1","Out for Delivery","",["Press Out for Delivery."],"Status changes to out for delivery; the customer's tracking page shows it."],
+    ["R-33","P1","Delivered","",["Press Delivered and confirm."],"The order is complete and leaves your list. A cash order is marked paid."],
+    ["R-34","P2","Failed attempt and Retry","",["Press Failed Attempt and confirm; then Retry Delivery."],"Status goes to failed, then back to out for delivery."],
+    ["R-35","P2","Earnings and totals","Deliveries done today.",["Look at the boxes at the top."],"Open deliveries, delivered today, cash to collect and Earned Today are correct."],
+    ["R-36","P1","Can't touch another rider's order","",["(Ask the developer) try to mark another rider's order delivered."],"Refused."]
+  ]}
+]},
+{ id: "vendor", name: "Supplier portal", who: "Suppliers / vendors", url: "/vendor", sections: [
+  { id: "v-auth", name: "Sign up, sign in & passwords", where: "/vendor/register, /vendor/login", actions: [
+    ["V-01","P1","Sign up as a supplier","Test signup code on.",["Open /vendor/register. Enter business name, PAN (9 digits), business type, mobile, email, password. Send code, enter 123456, submit."],"Account is created and the verification steps open."],
+    ["V-02","P1","Bad PAN or used mobile","",["Try an 8-digit PAN; then a mobile already used."],"Both refused with clear messages."],
+    ["V-03","P1","Sign in with mobile or email","",["Sign in with each."],"Both work."],
+    ["V-04","P1","Forgot password","",["Use Forgot password and set a new one."],"The new password works."],
+    ["V-05","P1","Sign out","",["Press Sign out."],"Back at sign-in."],
+    ["V-06","P1","Supplier login is separate","Signed in as a supplier.",["Open /admin and /rider."],"Not signed in there."]
+  ]},
+  { id: "v-verify", name: "Verification steps", where: "Verification", actions: [
+    ["V-07","P1","Business","vendor.draft account.",["Fill in registered business name, business type, registration number and place, VAT registered, supplies food."],"Required fields are checked."],
+    ["V-08","P1","Business documents","",["Upload PAN certificate, registration certificate, VAT certificate (if VAT registered), food license (if supplies food)."],"VAT and food license are only asked for when ticked."],
+    ["V-09","P1","Authorized person","",["Enter name, designation, mobile and their citizenship or national ID."],"Accepted."],
+    ["V-10","P1","Pickup location","",["Enter province, district, municipality, ward, street and map location."],"Accepted."],
+    ["V-11","P1","Payout","",["Choose bank (account holder name must match, account number, proof) or wallet."],"Required details are checked."],
+    ["V-12","P1","Review & agree, then submit","",["Tick the agreement and press Submit for verification."],"Status becomes submitted."],
+    ["V-13","P1","Fix what was asked","vendor.needs_changes account.",["Open verification."],"Only the rejected documents can be changed; resubmit works."]
+  ]},
+  { id: "v-products", name: "My products", where: "My products", actions: [
+    ["V-14","P1","Submit a product","Approved supplier.",["New product: name, brand name, category, description (ingredients, storage, origin), pack sizes with your SKU and your price to DarkStore."],"It's listed as pending review and doesn't appear on the shop yet."],
+    ["V-15","P2","Edit a product waiting for review","",["Edit it and save."],"Changes are saved."],
+    ["V-16","P1","Can't edit approved products","A live product.",["Try to edit it."],"Editing isn't allowed; prices and status are set by DarkStore staff."],
+    ["V-17","P1","Product sent back","Admin pressed Request changes.",["Open the product."],"It shows needs changes with admin's note; fix and resubmit."],
+    ["V-18","P1","Your price stays private","A live product.",["Look at the product on the shop as a customer."],"Customers never see your price or company name."]
+  ]},
+  { id: "v-reports", name: "Stock, sales & settlement", where: "Stock overview, Sales & settlement", actions: [
+    ["V-19","P2","Stock overview","Live products in stock.",["Open Stock overview."],"Shows how much of your own products is in stock, and nobody else's."],
+    ["V-20","P1","Sales & settlement","Your products sold in delivered orders.",["Open Sales & settlement."],"Quantity delivered × your price at the time of order, minus payouts received, equals the balance shown."],
+    ["V-21","P2","Export sales","",["Press the export button."],"A spreadsheet of your sales downloads."],
+    ["V-22","P2","Change pickup location","",["Request a pickup location change with a reason."],"Request sent; admin sees it."],
+    ["V-23","P2","Account status","",["Open Account status; upload a renewed document if one expired."],"Stage and reasons shown; renewed document accepted."]
+  ]}
+]},
+{ id: "auto", name: "Automatic jobs", who: "Checked with the developer", url: "Runs in the background", sections: [
+  { id: "x-jobs", name: "Things the system does by itself", where: "Ask the developer to trigger these", actions: [
+    ["X-01","P1","Unpaid orders release stock","An online order left unpaid for 30 minutes.",["Wait (or ask the developer to run the job)."],"The held stock is available again."],
+    ["X-02","P1","Document expiry reminders","A rider whose license expires in 7 days and one whose expired yesterday.",["Ask the developer to run the daily document check."],"The first gets a reminder text. The second's document is marked expired and they're paused until they upload a new one."],
+    ["X-03","P3","Sitemap","",["Ask the developer to rebuild the sitemap, then open /sitemap.xml."],"It lists the home page, products and public pages."]
+  ]}
+]}
+];
+
+const KEY = "darkstore-qa-v2";
+let state = {};
+try { state = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { state = {}; }
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const all = PANELS.flatMap(p => p.sections.flatMap(s => s.actions.map(a => ({ panel: p, id: a[0], prio: a[1], title: a[2], setup: a[3], steps: a[4], expected: a[5] }))));
+const count = list => list.reduce((n, s) => n + s.actions.length, 0);
+
+function caseHtml(a) {
+  const s = state[a[0]] || {};
+  return `<article class="case" data-id="${a[0]}" data-prio="${a[1]}" data-status="${s.status || "todo"}">
+    <div>
+      <div class="case-title"><span class="cid">${a[0]}</span><span class="prio ${a[1]}">${a[1]}</span><h4>${esc(a[2])}</h4></div>
+      <div class="case-body">
+        ${a[3] ? `<div class="lbl">Before you start</div><p>${esc(a[3])}</p>` : ""}
+        <div class="lbl">Steps</div><ol>${a[4].map(x => `<li>${esc(x)}</li>`).join("")}</ol>
+        <div class="lbl">You should see</div><p class="expected">${esc(a[5])}</p>
+      </div>
+    </div>
+    <div class="status" role="group" aria-label="Result for ${a[0]}">
+      ${["pass","fail","blocked"].map(v => `<button type="button" class="${v}" data-set="${v}" aria-pressed="${s.status === v}">${v[0].toUpperCase() + v.slice(1)}</button>`).join("")}
+    </div>
+    <input class="note-input" id="note-${a[0]}" data-note="${a[0]}" placeholder="What happened? Browser, account, order number" value="${esc(s.note || "")}" ${s.status === "fail" || s.status === "blocked" || s.note ? "" : "hidden"}>
+  </article>`;
+}
+
+function render() {
+  document.getElementById("total-meta").textContent = `${PANELS.length} panels · ${PANELS.reduce((n, p) => n + p.sections.length, 0)} sections · ${all.length} checks`;
+  document.getElementById("f-panel").innerHTML = `<option value="">All panels</option>` + PANELS.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join("");
+  document.getElementById("toc").innerHTML = PANELS.map(p => `<div><h4><a href="#${p.id}">${esc(p.name)}</a> <span class="tc">(${count(p.sections)})</span></h4><ul>${p.sections.map(s => `<li><a href="#${s.id}">${esc(s.name)}</a> <span class="tc">${s.actions.length}</span></li>`).join("")}</ul></div>`).join("");
+  document.getElementById("panels").innerHTML = PANELS.map(p => `
+    <div class="panel-block" data-panel="${p.id}">
+      <div class="panel-head" id="${p.id}"><div class="wrap"><h2>${esc(p.name)}</h2><span class="who">For: ${esc(p.who)}</span><span class="url">${esc(p.url)}</span></div></div>
+      <div class="wrap">
+        ${p.sections.map(s => `<section class="sec" id="${s.id}">
+          <div class="sec-head"><h3>${esc(s.name)}</h3><span class="where">${esc(s.where)}</span></div>
+          ${s.note ? `<p class="sec-note">${esc(s.note)}</p>` : ""}
+          ${s.actions.map(caseHtml).join("")}
+        </section>`).join("")}
+      </div>
+    </div>`).join("");
+  refresh();
+}
+
+function refresh() {
+  const q = document.getElementById("f-search").value.trim().toLowerCase();
+  const pp = document.getElementById("f-panel").value;
+  const pr = document.getElementById("f-prio").value;
+  const st = document.getElementById("f-status").value;
+  let shown = 0;
+  document.querySelectorAll(".panel-block").forEach(block => {
+    const panelOk = !pp || block.dataset.panel === pp;
+    block.querySelectorAll(".case").forEach(el => {
+      const status = (state[el.dataset.id] || {}).status || "todo";
+      const ok = panelOk && (!pr || el.dataset.prio === pr) && (!st || status === st) && (!q || el.textContent.toLowerCase().includes(q));
+      el.hidden = !ok; if (ok) shown++;
+    });
+    block.querySelectorAll("section.sec").forEach(sec => { sec.hidden = ![...sec.querySelectorAll(".case")].some(c => !c.hidden); });
+    block.hidden = ![...block.querySelectorAll(".case")].some(c => !c.hidden);
+  });
+  document.getElementById("no-results").hidden = shown > 0;
+  const n = { pass: 0, fail: 0, blocked: 0 };
+  all.forEach(c => { const s = (state[c.id] || {}).status; if (n[s] !== undefined) n[s]++; });
+  const total = all.length, run = n.pass + n.fail + n.blocked;
+  ["pass","fail","blocked"].forEach(k => document.getElementById("bar-" + k).style.width = (n[k] / total * 100) + "%");
+  document.getElementById("counts").innerHTML = `<span><b>${run}</b> of ${total} checked</span><span>Pass <b>${n.pass}</b></span><span>Fail <b>${n.fail}</b></span><span>Blocked <b>${n.blocked}</b></span><span>Left <b>${total - run}</b></span>`;
+}
+
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-set]");
+  if (!b) return;
+  const card = b.closest(".case"), id = card.dataset.id, v = b.dataset.set;
+  const cur = state[id] || {};
+  cur.status = cur.status === v ? undefined : v;
+  state[id] = cur; save();
+  card.dataset.status = cur.status || "todo";
+  card.querySelectorAll("[data-set]").forEach(x => x.setAttribute("aria-pressed", String(x.dataset.set === cur.status)));
+  const note = card.querySelector(".note-input");
+  if (cur.status === "fail" || cur.status === "blocked") { note.hidden = false; note.focus(); }
+  refresh();
+});
+document.addEventListener("input", e => {
+  const id = e.target.dataset && e.target.dataset.note;
+  if (!id) return;
+  state[id] = Object.assign(state[id] || {}, { note: e.target.value }); save();
+});
+["f-search","f-panel","f-prio","f-status"].forEach(id => document.getElementById(id).addEventListener("input", refresh));
+
+function summary() {
+  const n = { pass: 0, fail: 0, blocked: 0 };
+  all.forEach(c => { const s = (state[c.id] || {}).status; if (n[s] !== undefined) n[s]++; });
+  const lines = [`DarkStore QA results — ${new Date().toLocaleString()}`, `Checked ${n.pass + n.fail + n.blocked}/${all.length} · Pass ${n.pass} · Fail ${n.fail} · Blocked ${n.blocked}`, ""];
+  ["fail","blocked","pass"].forEach(k => {
+    const rows = all.filter(c => (state[c.id] || {}).status === k);
+    if (!rows.length) return;
+    lines.push(k.toUpperCase());
+    rows.forEach(c => lines.push(`- ${c.id} [${c.prio}] ${c.panel.name}: ${c.title}${state[c.id].note ? " — " + state[c.id].note : ""}`));
+    lines.push("");
+  });
+  return lines.join("\n");
+}
+const toast = msg => { const t = document.getElementById("toast"); t.textContent = msg; t.classList.add("show"); setTimeout(() => t.classList.remove("show"), 1800); };
+document.getElementById("copy-btn").addEventListener("click", () => {
+  const text = summary();
+  const fallback = () => {
+    const w = document.getElementById("copy-fallback-wrap");
+    w.hidden = false; w.innerHTML = `<div class="box" style="margin-top:16px"><p>Copying isn't allowed here. Select the text below and copy it.</p><textarea class="copy-fallback" id="copy-text" readonly></textarea></div>`;
+    const ta = document.getElementById("copy-text"); ta.value = text; ta.focus(); ta.select();
+  };
+  try { navigator.clipboard.writeText(text).then(() => toast("Results copied"), fallback); } catch (e) { fallback(); }
+});
+document.getElementById("reset-btn").addEventListener("click", () => { document.getElementById("reset-confirm").hidden = false; });
+document.getElementById("reset-no").addEventListener("click", () => { document.getElementById("reset-confirm").hidden = true; });
+document.getElementById("reset-yes").addEventListener("click", () => { state = {}; save(); document.getElementById("reset-confirm").hidden = true; render(); toast("Everything cleared"); });
+
+render();
+</script>
