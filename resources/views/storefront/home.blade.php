@@ -5,81 +5,51 @@
 
 @if(! $currentCity)
     <!-- City Selection Welcome Screen -->
-    <div class="space-y-8 py-4 sm:py-8">
-        
-        <!-- Welcome Hero Banner -->
-        <div class="bg-gradient-to-br from-amber-500/10 via-amber-100/40 to-slate-100 rounded-3xl p-6 sm:p-12 border border-amber-200/60 shadow-xs text-center max-w-3xl mx-auto space-y-4 relative overflow-hidden">
-            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 text-amber-950 text-xs font-bold tracking-wide border border-amber-200 shadow-2xs mx-auto">
-                <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-                <span class="uppercase tracking-wider text-[11px]">Instant Local Dark Stores</span>
-            </div>
+    <div class="space-y-10 py-6 sm:py-12">
 
+        <!-- Welcome Hero -->
+        <div class="text-center max-w-2xl mx-auto space-y-3">
             <h1 class="text-3xl sm:text-5xl font-extrabold text-slate-950 tracking-tight leading-tight">
                 Where should we deliver today?
             </h1>
-
-            <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-xl mx-auto">
-                DarkStore delivers groceries, chilled beverages, pantry staples, and daily essentials in <strong>15–30 minutes</strong> directly from neighborhood micro-warehouses. Choose your delivery city to explore localized stock, accurate delivery SLAs, and prices.
+            <p class="text-sm text-slate-500 leading-relaxed max-w-xl mx-auto">
+                Groceries, cold drinks and daily essentials in <strong class="text-slate-700">15–30 minutes</strong>. Choose your city to see local stock and prices.
             </p>
-
-            <!-- Decorative bolt -->
-            <div class="absolute -right-6 -bottom-6 opacity-10 pointer-events-none select-none text-slate-900">
-                <svg class="w-64 h-64" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-            </div>
         </div>
 
         <!-- City Selection Cards Grid -->
         <div class="max-w-5xl mx-auto space-y-4">
-            <div class="flex items-center justify-between">
-                <div>
-                    <h2 class="text-base sm:text-xl font-extrabold text-slate-950">Select Your Delivery City</h2>
-                    <p class="text-xs text-slate-500">Pick your delivery destination to unlock local inventory & pricing</p>
-                </div>
-                <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                    {{ count($cities) }} cities operational
-                </span>
-            </div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-950">Select Your Delivery City</h2>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($cities as $city)
                     <form action="{{ route('storefront.cart.change_city') }}" method="POST" class="h-full">
                         @csrf
                         <input type="hidden" name="city_id" value="{{ $city->id }}">
-                        <button 
-                            type="submit" 
-                            class="w-full h-full p-6 rounded-3xl bg-white hover:bg-amber-50/40 border-2 border-slate-200 hover:border-amber-500 shadow-xs hover:shadow-md transition-all duration-200 text-left cursor-pointer group flex flex-col justify-between"
+                        <button
+                            type="submit"
+                            class="w-full h-full p-5 rounded-2xl bg-white border border-slate-200 hover:border-slate-900 transition text-left cursor-pointer group space-y-4"
                         >
-                            <div class="space-y-4">
-                                <div class="flex items-center justify-between">
-                                    <div class="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black group-hover:scale-110 transition duration-200 shadow-sm">
-                                        <svg class="w-6 h-6 fill-current" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                                    </div>
-                                    <span class="text-xs font-bold text-emerald-800 bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-full">
-                                        ~{{ $city->estimated_delivery_minutes }}m SLA
-                                    </span>
-                                </div>
+                            <div class="flex items-start justify-between gap-3">
                                 <div>
-                                    <h3 class="text-xl font-extrabold text-slate-950 group-hover:text-amber-600 transition">{{ $city->name }}</h3>
+                                    <h3 class="text-lg font-bold text-slate-950">{{ $city->name }}</h3>
                                     <p class="text-xs text-slate-500">{{ $city->province ?? 'Nepal' }}</p>
                                 </div>
-                                <div class="pt-3 border-t border-slate-100 space-y-1.5 text-xs text-slate-600">
-                                    <div class="flex justify-between">
-                                        <span class="text-slate-500">Standard Delivery:</span>
-                                        <span class="font-bold text-slate-900">Rs {{ number_format($city->default_delivery_fee) }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-slate-500">Free Delivery:</span>
-                                        <span class="font-bold text-emerald-700">&gt; Rs {{ number_format($city->free_delivery_minimum ?? 500) }}</span>
-                                    </div>
-                                    <div class="flex justify-between">
-                                        <span class="text-slate-500">Payment:</span>
-                                        <span class="font-bold text-slate-900">COD & Online Wallets</span>
-                                    </div>
+                                <span class="text-xs font-semibold text-slate-700 whitespace-nowrap">~{{ $city->estimated_delivery_minutes }}m SLA</span>
+                            </div>
+                            <div class="space-y-1 text-xs text-slate-500">
+                                <div class="flex justify-between">
+                                    <span>Delivery</span>
+                                    <span class="text-slate-900">Rs {{ number_format($city->default_delivery_fee) }}</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span>Free delivery above</span>
+                                    <span class="text-slate-900">Rs {{ number_format($city->free_delivery_minimum ?? 500) }}</span>
                                 </div>
                             </div>
-                            <div class="mt-5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs font-bold text-slate-950 group-hover:text-amber-600">
+                            <div class="flex items-center justify-between text-sm font-semibold text-slate-950">
                                 <span>Shop in {{ $city->name }}</span>
-                                <span class="group-hover:translate-x-1.5 transition duration-200">→</span>
+                                <span class="group-hover:translate-x-1 transition">→</span>
                             </div>
                         </button>
                     </form>
@@ -94,7 +64,7 @@
     @if(!empty($banners))
         <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
             @foreach($banners as $banner)
-                <div class="snap-center shrink-0 w-full sm:w-[85%] md:w-3/4 rounded-3xl overflow-hidden relative shadow-sm border border-slate-200">
+                <div class="snap-center shrink-0 w-full sm:w-[85%] md:w-3/4 rounded-2xl overflow-hidden relative">
                     @if(!empty($banner['link_url']))
                         <a href="{{ $banner['link_url'] }}" class="block">
                     @endif
@@ -106,121 +76,83 @@
             @endforeach
         </div>
     @else
-        <!-- Hero Editorial Promo Banner Fallback -->
-        <div class="bg-gradient-to-br from-amber-500/10 via-amber-100/40 to-slate-100 rounded-3xl p-6 sm:p-10 border border-amber-200/60 shadow-xs relative overflow-hidden">
-            <div class="max-w-xl space-y-3 relative z-10">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/90 text-amber-950 text-xs font-bold tracking-wide border border-amber-200 shadow-2xs">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    <span class="uppercase tracking-wider text-[11px]">Instant Local Dark Store</span>
-                </div>
-                
-                <h1 class="text-2xl sm:text-4xl lg:text-5xl font-extrabold text-slate-950 tracking-tight leading-tight">
-                    Daily Essentials at your Door in <span class="text-amber-600 underline decoration-amber-400 decoration-wavy underline-offset-4">{{ $currentCity->name }}</span>.
-                </h1>
-                
-                <p class="text-xs sm:text-sm text-slate-600 font-medium leading-relaxed max-w-lg">
-                    Fresh dairy, chilled drinks, pantry essentials & quick snacks dispatched cold and fresh in <strong>{{ $currentCity->estimated_delivery_minutes ?? 30 }} minutes</strong> directly from neighborhood micro-warehouses.
-                </p>
-
-                <div class="pt-2 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-700">
-                    <span class="inline-flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-lg border border-slate-200">
-                        <svg class="w-3.5 h-3.5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                        <span>~{{ $currentCity->estimated_delivery_minutes ?? 30 }}m Delivery SLA</span>
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-lg border border-slate-200">
-                        <svg class="w-3.5 h-3.5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
-                        <span>Free Delivery &gt; Rs {{ number_format($currentCity->free_delivery_minimum ?? 500) }}</span>
-                    </span>
-                    <span class="inline-flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-lg border border-slate-200">
-                        <svg class="w-3.5 h-3.5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        <span>COD & Online Wallets</span>
-                    </span>
-                </div>
-            </div>
-
-            <div class="absolute -right-6 -bottom-6 opacity-10 pointer-events-none select-none text-slate-900">
-                <svg class="w-72 h-72 sm:w-96 sm:h-96" viewBox="0 0 24 24" fill="currentColor">
-                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-                </svg>
-            </div>
+        <!-- Hero Fallback -->
+        <div class="py-2 sm:py-4 space-y-2">
+            <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-950 tracking-tight leading-tight">
+                Daily Essentials at your Door in {{ $currentCity->name }}
+            </h1>
+            <p class="text-sm text-slate-500">
+                Delivered in ~{{ $currentCity->estimated_delivery_minutes ?? 30 }} minutes · Free delivery above Rs {{ number_format($currentCity->free_delivery_minimum ?? 500) }} · Cash on delivery or wallet
+            </p>
         </div>
     @endif
 
     <!-- Category Filter Chips Strip -->
-    <div class="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-none">
-        @if(!empty($featuredProducts))
-            <a 
-                href="{{ route('storefront.home', ['city_id' => $currentCity->id]) }}"
-                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 {{ !$selectedCategoryId && !request('q') ? 'bg-slate-950 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}"
-            >
-                <span>Featured</span>
-            </a>
-        @endif
-        @foreach($topCategories as $category)
-            <a 
-                href="{{ route('storefront.home', array_filter(['category_id' => $category->id, 'city_id' => $currentCity->id, 'q' => request('q')])) }}"
-                class="px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition cursor-pointer flex items-center gap-1.5 {{ $selectedCategoryId == $category->id ? 'bg-slate-950 text-white shadow-xs' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}"
-            >
-                <span>{{ $category->name }}</span>
-                <span class="text-[10px] opacity-75 font-mono">({{ $category->products_count }})</span>
-            </a>
-        @endforeach
-    </div>
-
-    @if($subCategories->isNotEmpty())
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-2 -mt-1 scrollbar-none">
-            @foreach($subCategories as $subCategory)
+    <div class="space-y-2">
+        <div class="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
+            @if(!empty($featuredProducts))
                 <a
-                    href="{{ route('storefront.home', array_filter(['category_id' => $subCategory->id, 'city_id' => $currentCity->id, 'q' => request('q')])) }}"
-                    class="px-3 py-1.5 rounded-full text-[11px] font-semibold whitespace-nowrap transition cursor-pointer flex items-center gap-1 {{ $selectedCategoryId == $subCategory->id ? 'bg-amber-500 text-white shadow-xs' : 'bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-200' }}"
+                    href="{{ route('storefront.home', ['city_id' => $currentCity->id]) }}"
+                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition cursor-pointer {{ !$selectedCategoryId && !request('q') ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}"
                 >
-                    <span>{{ $subCategory->name }}</span>
-                    <span class="text-[10px] opacity-75 font-mono">({{ $subCategory->products_count }})</span>
+                    Featured
+                </a>
+            @endif
+            @foreach($topCategories as $category)
+                <a
+                    href="{{ route('storefront.home', array_filter(['category_id' => $category->id, 'city_id' => $currentCity->id, 'q' => request('q')])) }}"
+                    class="px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition cursor-pointer {{ $selectedCategoryId == $category->id ? 'bg-slate-900 text-white' : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200' }}"
+                >
+                    {{ $category->name }} <span class="opacity-60">{{ $category->products_count }}</span>
                 </a>
             @endforeach
         </div>
-    @endif
+
+        @if($subCategories->isNotEmpty())
+            <div class="flex items-center gap-4 overflow-x-auto pb-1 scrollbar-none text-sm">
+                @foreach($subCategories as $subCategory)
+                    <a
+                        href="{{ route('storefront.home', array_filter(['category_id' => $subCategory->id, 'city_id' => $currentCity->id, 'q' => request('q')])) }}"
+                        class="py-1 whitespace-nowrap transition cursor-pointer border-b-2 {{ $selectedCategoryId == $subCategory->id ? 'border-slate-900 text-slate-950 font-semibold' : 'border-transparent text-slate-500 hover:text-slate-900' }}"
+                    >
+                        {{ $subCategory->name }} <span class="opacity-60">{{ $subCategory->products_count }}</span>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
 
     <!-- Product Grid Section -->
     <div>
-        <div class="flex items-center justify-between mb-4">
-            <div>
-                <h2 class="text-base sm:text-xl font-extrabold text-slate-950 tracking-tight flex items-center gap-2">
-                    @if(request('q'))
-                        <span>Search results for "{{ request('q') }}"</span>
-                    @elseif($selectedCategoryId)
-                        <span>Category Products</span>
-                    @else
-                        <span>Featured in {{ $currentCity->name }}</span>
-                    @endif
-                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                </h2>
-                <p class="text-xs text-slate-500">Local stock available for immediate 30-min picking & dispatch</p>
-            </div>
-            <span class="text-xs font-bold text-slate-500 bg-slate-100 px-3 py-1 rounded-full border border-slate-200">
-                {{ count($products) }} items
-            </span>
+        <div class="flex items-baseline justify-between gap-3 mb-4">
+            <h2 class="text-lg sm:text-xl font-bold text-slate-950 tracking-tight">
+                @if(request('q'))
+                    Search results for "{{ request('q') }}"
+                @elseif($selectedCategoryId)
+                    Category Products
+                @else
+                    Featured in {{ $currentCity->name }}
+                @endif
+            </h2>
+            <span class="text-xs text-slate-500 whitespace-nowrap">{{ count($products) }} items</span>
         </div>
 
         @if(empty($products))
-            <div class="py-20 text-center space-y-4 bg-white rounded-3xl border border-slate-200 p-8 shadow-xs">
-                <div class="w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mx-auto">
-                    <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
-                </div>
+            <div class="py-16 text-center space-y-3 bg-white rounded-2xl border border-slate-200 p-8">
                 <h3 class="text-base font-bold text-slate-900">No products available in this view</h3>
-                <p class="text-xs text-slate-500 max-w-sm mx-auto">
-                    Items are strictly localized to each city's dark store. Try selecting another category or clearing your filters.
+                <p class="text-sm text-slate-500 max-w-sm mx-auto">
+                    Items are localized to each city's store. Try another category or clear your filters.
                 </p>
-                <button 
+                <button
                     onclick="document.getElementById('city-modal').showModal()"
-                    class="mt-2 px-5 py-2.5 bg-slate-950 hover:bg-black text-white font-bold rounded-xl text-xs uppercase tracking-wider transition cursor-pointer shadow-xs"
+                    class="mt-2 px-5 py-2.5 bg-slate-900 hover:bg-black text-white font-semibold rounded-xl text-sm transition cursor-pointer"
                 >
                     Change Delivery City
                 </button>
             </div>
         @else
             <!-- Responsive Grid: 2 columns on Mobile, 3 on Tablet, 4-5 on Desktop -->
-            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4.5">
+            <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
                 @foreach($products as $product)
                     @php
                         $primaryVariant = $product['variants'][0] ?? null;
@@ -233,56 +165,39 @@
                         $inCartItem = collect($cartDetailed['items'] ?? [])->firstWhere('variant_id', $primaryVariant['id'] ?? null);
                         $inCartQty = $inCartItem['quantity'] ?? 0;
                     @endphp
-                    <div class="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200 hover:border-slate-300 shadow-2xs hover:shadow-md transition-all duration-200 flex flex-col justify-between group relative">
-                        
-                        <!-- Top Tag: Delivery SLA & Stock State -->
-                        <div class="flex items-center justify-between gap-1 mb-2">
-                            <span class="delivery-badge px-2 py-0.5 rounded-md text-[10px] font-bold tracking-tight inline-flex items-center gap-1">
-                                <svg class="w-3 h-3 text-emerald-600" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                                <span>{{ $product['estimated_minutes'] }}m</span>
-                            </span>
-                            @if(! $hasStock)
-                                <span class="bg-rose-100 text-rose-800 border border-rose-200 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
-                                    Sold Out
-                                </span>
-                            @elseif($stockAvailable > 0 && $stockAvailable <= 5)
-                                <span class="bg-amber-100 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded text-[9px] font-black">
-                                    Only {{ $stockAvailable }} left
-                                </span>
-                            @elseif($discountPct > 0)
-                                <span class="bg-amber-100 text-amber-900 border border-amber-200 px-1.5 py-0.5 rounded text-[9px] font-black">
-                                    {{ $discountPct }}% OFF
-                                </span>
-                            @endif
-                        </div>
+                    <div class="bg-white rounded-2xl p-3 border border-slate-200 hover:border-slate-300 transition flex flex-col group">
 
                         <!-- Product Thumbnail & Links -->
                         <a href="{{ route('storefront.product', $product['slug']) }}" class="block cursor-pointer">
-                            <div class="aspect-square bg-slate-50 rounded-xl overflow-hidden mb-2.5 flex items-center justify-center relative border border-slate-100">
+                            <div class="aspect-square bg-slate-50 rounded-xl overflow-hidden mb-3 flex items-center justify-center relative">
                                 @if(!empty($product['image']))
-                                    <img 
-                                        src="{{ $product['image'] }}" 
-                                        alt="{{ $product['name'] }}" 
-                                        class="w-full h-full object-cover group-hover:scale-105 transition duration-300 {{ ! $hasStock ? 'grayscale opacity-50' : '' }}"
+                                    <img
+                                        src="{{ $product['image'] }}"
+                                        alt="{{ $product['name'] }}"
+                                        class="w-full h-full object-cover {{ ! $hasStock ? 'grayscale opacity-50' : '' }}"
                                         loading="lazy"
                                     >
                                 @else
-                                    <div class="w-12 h-12 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center">
-                                        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
-                                    </div>
+                                    <svg class="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5"><path stroke-linecap="round" stroke-linejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                                @endif
+
+                                {{-- One status badge at most: stock state wins over discount --}}
+                                @if(! $hasStock)
+                                    <span class="absolute top-2 left-2 bg-white/95 text-slate-700 px-2 py-0.5 rounded-md text-[10px] font-semibold">Sold out</span>
+                                @elseif($stockAvailable > 0 && $stockAvailable <= 5)
+                                    <span class="absolute top-2 left-2 bg-white/95 text-amber-700 px-2 py-0.5 rounded-md text-[10px] font-semibold">Only {{ $stockAvailable }} left</span>
+                                @elseif($discountPct > 0)
+                                    <span class="absolute top-2 left-2 bg-emerald-600 text-white px-2 py-0.5 rounded-md text-[10px] font-semibold">{{ $discountPct }}% off</span>
                                 @endif
                             </div>
 
-                            <!-- Brand & Product Title -->
-                            <div class="space-y-1 mb-3">
-                                <span class="text-[10px] font-bold text-slate-400 block uppercase tracking-wider truncate">
-                                    {{ $product['brand']['name'] ?? ($product['category']['name'] ?? 'Pantry') }}
-                                </span>
-                                <h3 class="text-xs sm:text-sm font-bold text-slate-900 line-clamp-2 leading-snug group-hover:text-amber-600 transition">
+                            <!-- Product Title -->
+                            <div class="space-y-0.5 mb-3">
+                                <h3 class="text-sm font-semibold text-slate-900 line-clamp-2 leading-snug">
                                     {{ $product['name'] }}
                                 </h3>
                                 @if($primaryVariant)
-                                    <span class="text-[11px] text-slate-500 font-medium block">
+                                    <span class="text-xs text-slate-500 block">
                                         {{ $primaryVariant['name'] }}
                                     </span>
                                 @endif
@@ -290,13 +205,13 @@
                         </a>
 
                         <!-- Price & Add Button -->
-                        <div class="pt-2 border-t border-slate-100 flex items-center justify-between gap-2 mt-auto">
-                            <div>
-                                <span class="text-xs sm:text-sm font-extrabold text-slate-950 block font-mono">
+                        <div class="flex items-center justify-between gap-2 mt-auto">
+                            <div class="leading-tight">
+                                <span class="text-sm font-bold text-slate-950 block">
                                     Rs {{ number_format($product['primary_price']) }}
                                 </span>
                                 @if($isSale && $regPrice > $currPrice)
-                                    <span class="text-[10px] text-slate-400 line-through font-mono">
+                                    <span class="text-[11px] text-slate-400 line-through">
                                         Rs {{ number_format($regPrice) }}
                                     </span>
                                 @endif
@@ -304,35 +219,34 @@
 
                             @if($hasStock && $primaryVariant)
                                 @if($inCartQty > 0)
-                                    <div class="flex items-center gap-1.5 bg-slate-950 text-white rounded-xl px-2 py-1 text-xs font-bold shadow-2xs">
+                                    <div class="flex items-center gap-1.5 bg-slate-900 text-white rounded-xl px-2 py-1 text-sm font-semibold">
                                         <form action="{{ route('storefront.cart.update') }}" method="POST" class="inline">
                                             @csrf
                                             <input type="hidden" name="variant_id" value="{{ $primaryVariant['id'] }}">
                                             <input type="hidden" name="quantity" value="{{ $inCartQty - 1 }}">
-                                            <button type="submit" class="px-1 text-amber-400 hover:text-white font-black cursor-pointer">-</button>
+                                            <button type="submit" class="px-1 cursor-pointer">-</button>
                                         </form>
-                                        <span class="font-mono text-center min-w-4 text-xs">{{ $inCartQty }}</span>
+                                        <span class="text-center min-w-4 text-xs">{{ $inCartQty }}</span>
                                         <form action="{{ route('storefront.cart.update') }}" method="POST" class="inline">
                                             @csrf
                                             <input type="hidden" name="variant_id" value="{{ $primaryVariant['id'] }}">
                                             <input type="hidden" name="quantity" value="{{ $inCartQty + 1 }}">
-                                            <button type="submit" class="px-1 text-amber-400 hover:text-white font-black cursor-pointer">+</button>
+                                            <button type="submit" class="px-1 cursor-pointer">+</button>
                                         </form>
                                     </div>
                                 @else
-                                    <button 
-                                        type="button" 
+                                    <button
+                                        type="button"
                                         onclick="addToCart({{ $primaryVariant['id'] }}, {{ $currentCity->id }}, this)"
-                                        class="px-3.5 py-1.5 rounded-xl bg-slate-950 hover:bg-black text-white text-xs font-bold transition duration-150 shadow-2xs cursor-pointer active:scale-95 flex items-center gap-1"
+                                        class="px-4 py-1.5 rounded-xl bg-slate-900 hover:bg-black text-white text-xs font-semibold transition cursor-pointer active:scale-95"
                                     >
-                                        <span>+</span>
-                                        <span>ADD</span>
+                                        Add
                                     </button>
                                 @endif
                             @else
-                                <button 
-                                    disabled 
-                                    class="px-2.5 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-[10px] font-bold cursor-not-allowed border border-slate-200"
+                                <button
+                                    disabled
+                                    class="px-3 py-1.5 rounded-xl bg-slate-100 text-slate-400 text-xs font-semibold cursor-not-allowed"
                                 >
                                     Out
                                 </button>
@@ -345,7 +259,7 @@
         @endif
     </div>
 
-    @include('storefront.partials.value-props', ['cityName' => $currentCity->name, 'wrapperClass' => 'mt-12'])
+    @include('storefront.partials.value-props', ['cityName' => $currentCity->name, 'wrapperClass' => 'mt-16'])
 @endif
 
 </div>
