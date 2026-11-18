@@ -1,6 +1,7 @@
 @extends('layouts.storefront')
 
 @section('content')
+@php($privacyEmail = 'privacy@'.preg_replace('/^www\./', '', parse_url(config('app.url'), PHP_URL_HOST) ?? 'localhost'))
 <div class="max-w-3xl mx-auto py-8 bg-white rounded-3xl p-6 sm:p-10 border border-slate-200 shadow-xs space-y-6 text-xs text-slate-700 leading-relaxed">
     <div class="border-b border-slate-100 pb-4">
         <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-950">Privacy & Customer Data Protection Policy</h1>
@@ -32,7 +33,7 @@
         <div>
             <h2 class="text-sm font-bold text-slate-900 mb-1.5">4. Data Deletion and Account Privacy Rights</h2>
             <p>
-                Customers retain full rights to inspect, update, or permanently delete their personal information, delivery addresses, and account history. To submit a data erasure request, please reach out to our privacy compliance desk at <strong class="text-slate-900">privacy@darkstore.np</strong>.
+                Customers retain full rights to inspect, update, or permanently delete their personal information, delivery addresses, and account history. To submit a data erasure request, please reach out to our privacy compliance desk at <a href="mailto:{{ $privacyEmail }}" class="font-bold text-slate-900 underline">{{ $privacyEmail }}</a>.
             </p>
         </div>
     </div>

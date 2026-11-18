@@ -361,6 +361,15 @@
                     <p class="text-[11px] text-slate-500 leading-relaxed">
                         Next-generation quick-commerce architecture bringing instant 30-minute retail delivery to Dharan, Itahari, and eastern hubs.
                     </p>
+                    <nav aria-labelledby="work-with-us" class="space-y-2">
+                        <h5 id="work-with-us" class="font-bold text-slate-900 uppercase tracking-wider text-[11px]">Work With Us</h5>
+                        <ul class="space-y-1.5 text-[11px]">
+                            <li><a href="{{ url('/rider/register') }}" class="hover:text-slate-900 transition">Become a Delivery Rider</a></li>
+                            <li><a href="{{ url('/vendor/register') }}" class="hover:text-slate-900 transition">Supply Products to Us</a></li>
+                            <li><a href="{{ url('/rider/login') }}" class="hover:text-slate-900 transition">Rider Login</a></li>
+                            <li><a href="{{ url('/vendor/login') }}" class="hover:text-slate-900 transition">Supplier Login</a></li>
+                        </ul>
+                    </nav>
                 </div>
 
                 <div class="space-y-2">
