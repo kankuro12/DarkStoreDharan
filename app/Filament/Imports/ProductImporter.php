@@ -4,6 +4,7 @@ namespace App\Filament\Imports;
 
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductVariant;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
@@ -53,7 +54,66 @@ class ProductImporter extends Importer
                 ->rules(['nullable', 'url', 'max:2000'])
                 ->example('https://example.com/images/coca-cola.jpg')
                 ->helperText('A direct image URL. Leave blank to add a photo later from the media library.'),
+
+            // Variant fields: mapped in the import but written by saveRecord(), not
+            // filled onto the Product model (which has no such columns).
+            ImportColumn::make('variant_name')
+                ->label('Variant Name')
+                ->rules(['nullable', 'max:255'])
+                ->example('500ml Bottle')
+                ->fillRecordUsing(fn () => null),
+
+            ImportColumn::make('sku')
+                ->label('SKU')
+                ->requiredMapping()
+                ->rules(['required', 'max:255'])
+                ->example('COKE-PET-500ML')
+                ->fillRecordUsing(fn () => null),
+
+            ImportColumn::make('price')
+                ->label('Price (Rs)')
+                ->numeric()
+                ->requiredMapping()
+                ->rules(['required', 'numeric', 'min:0'])
+                ->example('85')
+                ->fillRecordUsing(fn () => null),
+
+            ImportColumn::make('weight_kg')
+                ->label('Weight (kg)')
+                ->numeric()
+                ->rules(['nullable', 'numeric', 'min:0'])
+                ->example('0.55')
+                ->fillRecordUsing(fn () => null),
         ];
+    }
+
+    /**
+     * Save the product, then upsert its variant from the same row so a single
+     * CSV creates a sellable product (price/SKU/stock-less variant) per line.
+     */
+    public function saveRecord(): void
+    {
+        parent::saveRecord();
+
+        $sku = strtoupper(trim((string) ($this->data['sku'] ?? '')));
+
+        if ($sku === '') {
+            return;
+        }
+
+        $weight = $this->data['weight_kg'] ?? null;
+
+        ProductVariant::updateOrCreate(
+            ['sku' => $sku],
+            [
+                'product_id' => $this->record->getKey(),
+                'name' => filled($this->data['variant_name'] ?? null) ? $this->data['variant_name'] : 'Default',
+                'price' => (float) ($this->data['price'] ?? 0),
+                'weight_kg' => filled($weight) ? (float) $weight : null,
+                'cod_allowed' => true,
+                'status' => 'active',
+            ]
+        );
     }
 
     /**
