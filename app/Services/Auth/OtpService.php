@@ -31,7 +31,8 @@ class OtpService
             ];
         }
 
-        $code = (string) random_int(100000, 999999);
+        $testMode = $this->usesTestCode($purpose);
+        $code = $testMode ? (string) config('otp.test_code') : (string) random_int(100000, 999999);
 
         OtpCode::create([
             'phone' => $phone,
@@ -42,9 +43,19 @@ class OtpService
 
         RateLimiter::hit($throttleKey, 45);
 
+        if ($testMode) {
+            return ['success' => true, 'message' => 'Test mode: use the test verification code.'];
+        }
+
         $this->smsService->send($phone, "Your DarkStore verification code is {$code}. It expires in 10 minutes.");
 
         return ['success' => true, 'message' => 'Verification code sent.'];
+    }
+
+    /** Test OTP mode applies to signups only, never to login or password reset. */
+    protected function usesTestCode(string $purpose): bool
+    {
+        return config('otp.test_mode') && str_ends_with($purpose, '_signup');
     }
 
     /**
