@@ -115,19 +115,19 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1.5">Delivery Zone / Ward</label>
-                        <select name="delivery_zone_id" id="address-zone" class="w-full rounded-xl border border-slate-300 p-3 bg-white focus:border-slate-900 focus:outline-none text-xs">
+                        <label for="address-zone" class="block font-bold text-slate-700 mb-1.5">Area / Chowk / Ward *</label>
+                        {{-- Preset by admin per city; free text only for cities with no areas set up yet. --}}
+                        <select name="delivery_zone_id" id="address-zone" required class="w-full rounded-xl border border-slate-300 p-3 bg-white focus:border-slate-900 focus:outline-none text-xs">
                             <option value="">Select city first</option>
                         </select>
+                        <input type="text" name="area" id="address-area" disabled class="hidden w-full rounded-xl border border-slate-300 p-3 focus:border-slate-900 focus:outline-none text-xs" placeholder="e.g. Bhanuchowk / Ward 3">
+                        @error('delivery_zone_id')<p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>@enderror
+                        @error('area')<p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>@enderror
                     </div>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1.5">Area / Chowk / Ward *</label>
-                        <input type="text" name="area" id="address-area" required class="w-full rounded-xl border border-slate-300 p-3 focus:border-slate-900 focus:outline-none text-xs">
-                    </div>
-                    <div>
+                    <div class="sm:col-span-2">
                         <label class="block font-bold text-slate-700 mb-1.5">Street Address / House *</label>
                         <input type="text" name="street" id="address-street" required class="w-full rounded-xl border border-slate-300 p-3 focus:border-slate-900 focus:outline-none text-xs">
                     </div>
@@ -162,12 +162,23 @@
         const zoneSelect = document.getElementById('address-zone');
         const zones = cityZones[citySelect.value] || [];
 
-        if (zones.length === 0) {
-            zoneSelect.innerHTML = '<option value="">No zones for this city</option>';
+        const areaInput = document.getElementById('address-area');
+        const hasZones = zones.length > 0 || !citySelect.value;
+
+        // Cities with preset areas: dropdown only. Cities without any yet: typed area.
+        zoneSelect.classList.toggle('hidden', !hasZones);
+        zoneSelect.disabled = !hasZones;
+        areaInput.classList.toggle('hidden', hasZones);
+        areaInput.disabled = hasZones;
+        areaInput.required = !hasZones;
+
+        if (!citySelect.value) {
+            zoneSelect.innerHTML = '<option value="">Select city first</option>';
             return;
         }
 
-        zoneSelect.innerHTML = zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
+        zoneSelect.innerHTML = '<option value="" disabled selected>Choose your area</option>'
+            + zones.map(z => `<option value="${z.id}">${z.name}</option>`).join('');
         if (selectedZoneId) {
             zoneSelect.value = selectedZoneId;
         }
@@ -178,7 +189,7 @@
         document.getElementById('address-form').action = '{{ route('storefront.account.addresses.store') }}';
         document.getElementById('address-form-method').value = 'POST';
         document.getElementById('address-form').reset();
-        document.getElementById('address-zone').innerHTML = '<option value="">Select city first</option>';
+        refreshZoneOptions();
     }
 
     function editAddress(id) {

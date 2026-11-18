@@ -58,6 +58,7 @@
             <a href="#public-pages">26. Help &amp; legal pages</a>
             <a href="#test-otp">27. Test OTP mode</a>
             <a href="#rider-offers">28. Rider delivery offers</a>
+            <a href="#delivery-areas">29. Delivery areas</a>
         </div>
 
         <h2 id="signing-in">1. Signing In</h2>
@@ -473,6 +474,15 @@
             <li>Riders switch themselves Online/Offline, but cannot go offline while they hold an unfinished delivery.
                 A rider can hold at most 2 open deliveries at once. Declined offers come back to that rider if the pay rises.</li>
         </ul>
+
+        <h2 id="delivery-areas">29. Delivery areas (Area / Chowk / Ward)</h2>
+        <p>
+            Customers choose their <strong>Area / Chowk / Ward</strong> from a list you set up under <strong>Delivery areas</strong>;
+            they cannot type their own. Each area belongs to a city and has its own delivery fee, delivery time, minimum order
+            and cash-on-delivery setting. Set an area to <em>Hidden</em> to stop new orders there without deleting it.
+        </p>
+        <div class="warn">A city with no active areas falls back to a typed area box, so add areas for every city you deliver to.
+            Saved addresses created before this change keep their typed area.</div>
 
         <div class="warn">Superadmin housekeeping: the seeded admin account starts with a default password — change
             it, and keep one shared ops login out of customer hands. Backups of the database run from the server;

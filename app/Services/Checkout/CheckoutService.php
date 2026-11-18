@@ -12,6 +12,7 @@ use App\Models\Address;
 use App\Models\AuditLog;
 use App\Models\City;
 use App\Models\Customer;
+use App\Models\DeliveryZone;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\ProductVariant;
@@ -75,13 +76,14 @@ class CheckoutService
             }
         } elseif (! empty($data['address'])) {
             $addrData = $data['address'];
+            $area = DeliveryZone::resolveAddressArea($cityId, $addrData['delivery_zone_id'] ?? null, $addrData['area'] ?? null);
             $address = Address::create([
                 'customer_id' => $customer?->id,
                 'city_id' => $cityId,
-                'delivery_zone_id' => $addrData['delivery_zone_id'] ?? null,
+                'delivery_zone_id' => $area['delivery_zone_id'],
                 'full_name' => $addrData['full_name'],
                 'phone' => $addrData['phone'],
-                'area' => $addrData['area'],
+                'area' => $area['area'],
                 'street' => $addrData['street'],
                 'landmark' => $addrData['landmark'] ?? null,
                 'delivery_notes' => $addrData['delivery_notes'] ?? null,

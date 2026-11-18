@@ -50,7 +50,7 @@ class CheckoutController extends Controller
             'address' => 'required_without:address_id|array',
             'address.full_name' => 'required_with:address|string|max:100',
             'address.phone' => 'required_with:address|string|max:20',
-            'address.area' => 'required_with:address|string|max:100',
+            'address.area' => 'nullable|string|max:100',
             'address.street' => 'required_with:address|string|max:150',
             'address.landmark' => 'nullable|string|max:150',
             'address.delivery_zone_id' => 'nullable|integer|exists:delivery_zones,id',

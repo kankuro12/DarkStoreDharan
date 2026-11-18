@@ -73,23 +73,25 @@
                     </div>
                 </div>
 
-                @if($zones->isNotEmpty())
-                    <div class="text-xs">
-                        <label class="block font-bold text-slate-700 mb-1.5">Select Delivery Zone / Ward</label>
-                        <select name="delivery_zone_id" class="w-full rounded-xl border border-slate-300 p-3 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:outline-none text-xs bg-white cursor-pointer transition">
-                            @foreach($zones as $zone)
-                                <option value="{{ $zone->id }}" {{ old('delivery_zone_id') == $zone->id ? 'selected' : '' }}>
-                                    {{ $zone->name }} (Rs {{ number_format($zone->delivery_fee) }} delivery • ~{{ $zone->estimated_minutes }} mins)
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                @endif
-
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                     <div>
-                        <label class="block font-bold text-slate-700 mb-1.5">Area / Chowk / Ward *</label>
-                        <input type="text" name="area" value="{{ old('area') }}" required class="w-full rounded-xl border border-slate-300 p-3 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:outline-none text-xs transition" placeholder="e.g. Bhanuchowk / Ward 3">
+                        <label for="delivery-area" class="block font-bold text-slate-700 mb-1.5">Area / Chowk / Ward *</label>
+                        @if($zones->isNotEmpty())
+                            {{-- Areas are preset by admin; customers must pick one. --}}
+                            <select id="delivery-area" name="delivery_zone_id" required class="w-full rounded-xl border border-slate-300 p-3 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:outline-none text-xs bg-white cursor-pointer transition">
+                                <option value="" disabled {{ old("delivery_zone_id") ? "" : "selected" }}>Choose your area</option>
+                                @foreach($zones as $zone)
+                                    <option value="{{ $zone->id }}" {{ old("delivery_zone_id") == $zone->id ? "selected" : "" }}>
+                                        {{ $zone->name }} (Rs {{ number_format($zone->delivery_fee) }} delivery • ~{{ $zone->estimated_minutes }} mins)
+                                    </option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-[11px] text-slate-500">Don&rsquo;t see your area? We may not deliver there yet.</p>
+                        @else
+                            <input id="delivery-area" type="text" name="area" value="{{ old("area") }}" required class="w-full rounded-xl border border-slate-300 p-3 focus:border-slate-900 focus:ring-1 focus:ring-slate-900 focus:outline-none text-xs transition" placeholder="e.g. Bhanuchowk / Ward 3">
+                        @endif
+                        @error("delivery_zone_id")<p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>@enderror
+                        @error("area")<p class="mt-1 text-[11px] text-red-600">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1.5">Street Address / House *</label>
@@ -331,7 +333,7 @@
     let currentTip = 0;
 
     function toggleNewAddressFieldsRequired(isRequired) {
-        const fields = document.querySelectorAll('#new-address-fields [name="full_name"], #new-address-fields [name="area"], #new-address-fields [name="street"], #new-address-fields [name="phone"]');
+        const fields = document.querySelectorAll('#new-address-fields [name="full_name"], #new-address-fields [name="area"], #new-address-fields [name="delivery_zone_id"], #new-address-fields [name="street"], #new-address-fields [name="phone"]');
         fields.forEach(field => {
             if (isRequired) {
                 field.setAttribute('required', 'required');

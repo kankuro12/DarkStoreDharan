@@ -108,7 +108,7 @@ class CheckoutWebController extends Controller
             'full_name' => $usingSavedAddress ? 'nullable|string|max:100' : 'required|string|max:100',
             'phone' => $usingSavedAddress ? 'nullable|string|min:10|max:15' : 'required|string|min:10|max:15',
             'delivery_zone_id' => 'nullable|integer|exists:delivery_zones,id',
-            'area' => $usingSavedAddress ? 'nullable|string|max:100' : 'required|string|max:100',
+            'area' => 'nullable|string|max:100', // required-ness decided by DeliveryZone::resolveAddressArea
             'street' => $usingSavedAddress ? 'nullable|string|max:150' : 'required|string|max:150',
             'landmark' => 'nullable|string|max:150',
             'delivery_notes' => 'nullable|string|max:500',
@@ -134,7 +134,7 @@ class CheckoutWebController extends Controller
                     'full_name' => $validated['full_name'],
                     'phone' => $validated['phone'],
                     'delivery_zone_id' => $validated['delivery_zone_id'] ?? null,
-                    'area' => $validated['area'],
+                    'area' => $validated['area'] ?? null,
                     'street' => $validated['street'],
                     'landmark' => $validated['landmark'] ?? null,
                     'delivery_notes' => $validated['delivery_notes'] ?? null,

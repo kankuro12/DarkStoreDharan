@@ -84,6 +84,7 @@ Enums (`app/Enums`): `OrderStatus` (pending → confirmed → processing → pac
 | `Checkout/CheckoutService` | `placeOrder()` and `confirmPrepaidOrder()` |
 | `Returns/ReturnService` | request → review → inspect & restock → refund |
 | `Sms/SmsService` | `SMS_DRIVER=log` (default) or `sparrow` (Sparrow SMS, Nepal) |
+| `DeliveryZone::resolveAddressArea()` | Area / Chowk / Ward is admin-preset (admin "Delivery areas" = `delivery_zones`). New addresses (checkout web+API via CheckoutService, saved addresses) must pick an active zone of the city; `area` is set to the zone name, typed text ignored. Cities with no active zones accept typed area |
 | `Delivery/DeliveryOfferService` | DoorDash-style offer board. Offer opens (`orders.offer_opened_at`) when an unassigned order moves to `processing`. Pay = `min(max, base + boost × floor(minutes / boost_minutes))`, never below base (city `rider_base_pay`/`rider_pay_boost`/`rider_pay_max`/`offer_boost_minutes`; `Order::currentOfferPay()`, `offerStuck()`). `accept()` is one conditional UPDATE (first rider wins), locks `orders.rider_pay`. Declines in `order_offer_declines` hide the offer until pay rises. Max 2 open deliveries per rider. Rider page `DeliveryOffers` (Offers, home page) |
 | `Auth/OtpService` | Issue/verify phone OTPs. `OTP_TEST_MODE=true` makes `*_signup` purposes (rider/vendor signup) use `OTP_TEST_CODE` with no SMS; login/password reset never affected (`config/otp.php`) |
 

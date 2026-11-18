@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Storefront;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\City;
+use App\Models\DeliveryZone;
 use App\Models\Order;
 use App\Services\Cart\CartService;
 use Illuminate\Http\RedirectResponse;
@@ -88,11 +89,13 @@ class AccountController extends Controller
             'delivery_zone_id' => 'nullable|integer|exists:delivery_zones,id',
             'full_name' => 'required|string|max:100',
             'phone' => 'required|string|min:10|max:15',
-            'area' => 'required|string|max:100',
+            'area' => 'nullable|string|max:100',
             'street' => 'required|string|max:150',
             'landmark' => 'nullable|string|max:150',
             'delivery_notes' => 'nullable|string|max:500',
         ]);
+
+        $validated = array_merge($validated, DeliveryZone::resolveAddressArea((int) $validated['city_id'], $validated['delivery_zone_id'] ?? null, $validated['area'] ?? null));
 
         $request->user()->addresses()->create($validated);
 
@@ -110,11 +113,13 @@ class AccountController extends Controller
             'delivery_zone_id' => 'nullable|integer|exists:delivery_zones,id',
             'full_name' => 'required|string|max:100',
             'phone' => 'required|string|min:10|max:15',
-            'area' => 'required|string|max:100',
+            'area' => 'nullable|string|max:100',
             'street' => 'required|string|max:150',
             'landmark' => 'nullable|string|max:150',
             'delivery_notes' => 'nullable|string|max:500',
         ]);
+
+        $validated = array_merge($validated, DeliveryZone::resolveAddressArea((int) $validated['city_id'], $validated['delivery_zone_id'] ?? null, $validated['area'] ?? null));
 
         $address->update($validated);
 
