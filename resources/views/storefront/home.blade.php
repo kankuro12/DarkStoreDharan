@@ -62,20 +62,58 @@
 @else
     <!-- Dynamic Banners or Fallback Hero -->
     @if(!empty($banners))
-        <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
-            @foreach($banners as $banner)
-                {{-- Narrower slides let the next banner peek in; a lone banner fills the row. --}}
-                <div class="snap-center shrink-0 w-full {{ count($banners) > 1 ? 'sm:w-[85%] md:w-3/4' : '' }} rounded-2xl overflow-hidden relative">
-                    @if(!empty($banner['link_url']))
-                        <a href="{{ $banner['link_url'] }}" class="block">
-                    @endif
-                    <img src="{{ $banner['image_url'] }}" alt="Promo Banner" class="w-full h-40 sm:h-64 object-cover">
-                    @if(!empty($banner['link_url']))
-                        </a>
-                    @endif
+        <section class="relative" data-banner-carousel aria-roledescription="carousel" aria-label="Promotions">
+            <div data-banner-track class="flex overflow-x-auto snap-x snap-mandatory rounded-2xl [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                @foreach($banners as $banner)
+                    <div class="snap-start shrink-0 w-full" aria-roledescription="slide" aria-label="{{ $loop->iteration }} of {{ count($banners) }}">
+                        @if(!empty($banner['link_url']))
+                            <a href="{{ $banner['link_url'] }}" class="block">
+                        @endif
+                        <img src="{{ $banner['image_url'] }}" alt="Promo Banner" class="w-full h-40 sm:h-64 object-cover" @if(!$loop->first) loading="lazy" @endif>
+                        @if(!empty($banner['link_url']))
+                            </a>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+
+            @if(count($banners) > 1)
+                <div class="absolute bottom-3 inset-x-0 flex justify-center gap-1.5">
+                    @foreach($banners as $banner)
+                        <button type="button" data-banner-dot aria-label="Show banner {{ $loop->iteration }}" @if($loop->first) aria-current="true" @endif
+                            class="h-2 rounded-full bg-white/60 shadow transition-all duration-300 w-2 aria-[current=true]:w-6 aria-[current=true]:bg-white"></button>
+                    @endforeach
                 </div>
-            @endforeach
-        </div>
+                <script>
+                    (() => {
+                        const root = document.currentScript.closest('[data-banner-carousel]');
+                        const track = root.querySelector('[data-banner-track]');
+                        const dots = [...root.querySelectorAll('[data-banner-dot]')];
+                        const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                        let paused = false;
+
+                        const current = () => Math.round(track.scrollLeft / track.clientWidth);
+                        const go = (i) => track.scrollTo({ left: i * track.clientWidth, behavior: reduceMotion ? 'auto' : 'smooth' });
+
+                        dots.forEach((dot, i) => dot.addEventListener('click', () => go(i)));
+                        track.addEventListener('scroll', () => {
+                            const i = current();
+                            dots.forEach((dot, j) => dot.setAttribute('aria-current', j === i ? 'true' : 'false'));
+                        }, { passive: true });
+
+                        // Pause while the shopper is looking at or touching a banner.
+                        ['mouseenter', 'focusin', 'touchstart'].forEach(e => root.addEventListener(e, () => paused = true, { passive: true }));
+                        ['mouseleave', 'focusout', 'touchend'].forEach(e => root.addEventListener(e, () => paused = false, { passive: true }));
+
+                        if (!reduceMotion) {
+                            setInterval(() => {
+                                if (!paused && !document.hidden) go((current() + 1) % dots.length);
+                            }, 5000);
+                        }
+                    })();
+                </script>
+            @endif
+        </section>
     @else
         <!-- Hero Fallback -->
         <div class="py-2 sm:py-4 space-y-2">
