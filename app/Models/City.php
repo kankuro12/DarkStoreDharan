@@ -23,6 +23,10 @@ class City extends Model
         'estimated_delivery_minutes',
         'banners',
         'featured_products',
+        'rider_base_pay',
+        'rider_pay_boost',
+        'rider_pay_max',
+        'offer_boost_minutes',
     ];
 
     protected function casts(): array
@@ -35,6 +39,10 @@ class City extends Model
             'estimated_delivery_minutes' => 'integer',
             'banners' => 'array',
             'featured_products' => 'array',
+            'rider_base_pay' => 'decimal:2',
+            'rider_pay_boost' => 'decimal:2',
+            'rider_pay_max' => 'decimal:2',
+            'offer_boost_minutes' => 'integer',
         ];
     }
 

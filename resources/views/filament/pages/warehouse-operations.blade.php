@@ -279,6 +279,7 @@
                                 <span class="ops-order-num">#{{ $order->order_number }}</span>
                                 <span class="ops-time" style="background: #fef3c7; color: #b45309; font-weight: 800;">IN TROLLEY</span>
                             </div>
+                            @include('filament.pages.partials.offer-status')
 
                             <div class="ops-items-box" style="background: #fffbeb;">
                                 @foreach($order->items as $item)
@@ -323,6 +324,7 @@
                                 <span class="ops-order-num">#{{ $order->order_number }}</span>
                                 <span class="ops-time" style="background: #f3e8ff; color: #7e22ce; font-weight: 800;">SEALED BAG</span>
                             </div>
+                            @include('filament.pages.partials.offer-status')
 
                             <p style="font-size: 0.75rem; color: #475569;">
                                 📍 {{ $order->address?->area }} ({{ $order->items->count() }} items)
@@ -361,6 +363,7 @@
                                 <span class="ops-order-num">#{{ $order->order_number }}</span>
                                 <span class="ops-time" style="background: #e0e7ff; color: #4338ca; font-weight: 800;">STAGED</span>
                             </div>
+                            @include('filament.pages.partials.offer-status', ['riders' => $this->availableRiders])
 
                             <p style="font-size: 0.75rem; color: #475569;">
                                 📍 {{ $order->address?->area }} • {{ $order->items->count() }} items

@@ -65,7 +65,14 @@ class MyDeliveries extends Page
             ->where('order_status', '!=', OrderStatus::Cancelled->value)
             ->sum('grand_total');
 
+        $earnedToday = Order::query()
+            ->where('delivery_agent_id', $agentId)
+            ->where('delivery_status', DeliveryStatus::Delivered)
+            ->whereDate('delivered_at', today())
+            ->sum('rider_pay');
+
         return [
+            'earnedToday' => (float) $earnedToday,
             'open' => $this->orders->count(),
             'deliveredToday' => $deliveredToday,
             'cashToCollect' => (float) $cashToCollect,

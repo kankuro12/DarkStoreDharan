@@ -6,6 +6,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Filament\Resources\Orders\Pages\ListOrders;
 use App\Filament\Resources\Orders\Pages\ViewOrder;
+use App\Models\DeliveryAgent;
 use App\Models\Order;
 use App\Services\Inventory\StockReservationService;
 use App\Support\WarehouseScope;
@@ -67,7 +68,12 @@ class OrderResource extends Resource
             ->components([
                 Select::make('delivery_agent_id')
                     ->label('Assigned Rider')
-                    ->relationship('deliveryAgent', 'name')
+                    // Plain options (not ->relationship()) so the save goes through ViewOrder's offer-aware handler.
+                    ->options(fn (?Order $record) => DeliveryAgent::query()
+                        ->where(fn ($q) => $q->eligibleForDispatch()->when($record, fn ($q) => $q->where('city_id', $record->city_id)))
+                        ->when($record?->delivery_agent_id, fn ($q) => $q->orWhere('id', $record->delivery_agent_id))
+                        ->pluck('name', 'id'))
+                    ->helperText('Overrides the rider offer. The rider is paid what the offer has reached (or the city base pay).')
                     ->searchable()
                     ->preload(),
                 Textarea::make('notes')
@@ -124,6 +130,7 @@ class OrderResource extends Resource
                                 TextEntry::make('subtotal')->money('NPR'),
                                 TextEntry::make('discount')->money('NPR'),
                                 TextEntry::make('delivery_fee')->label('Delivery Fee')->money('NPR'),
+                                TextEntry::make('rider_pay')->label('Rider Pay')->money('NPR')->placeholder('Not assigned'),
                                 TextEntry::make('grand_total')->label('Grand Total')->money('NPR')->weight('bold'),
                             ]),
                     ]),

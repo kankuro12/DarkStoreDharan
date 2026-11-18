@@ -57,6 +57,7 @@
             <a href="#popups">25. Storefront popups</a>
             <a href="#public-pages">26. Help &amp; legal pages</a>
             <a href="#test-otp">27. Test OTP mode</a>
+            <a href="#rider-offers">28. Rider delivery offers</a>
         </div>
 
         <h2 id="signing-in">1. Signing In</h2>
@@ -450,6 +451,28 @@
         </p>
         <div class="warn">While test mode is on, anyone can sign up as a rider or vendor with a phone number they do not own.
             Turn it off as soon as SMS works, and check new applicants&rsquo; phone numbers during review.</div>
+
+        <h2 id="rider-offers">28. Rider delivery offers</h2>
+        <p>
+            Riders pick their own orders, the way DoorDash works. When picking starts on an order with no rider, it appears
+            on the <strong>Offers</strong> screen of every approved, online rider in that city, with the rider pay shown up
+            front. The first rider to tap <em>Accept</em> gets it; that pay is saved on the order as the rider&rsquo;s earning
+            (shown as <em>Rider Pay</em> on the order).
+        </p>
+        <ul>
+            <li><strong>Pay settings</strong> are per city (Cities &rarr; edit): base pay, boost amount, maximum pay and boost
+                interval. Defaults: Rs 50, +Rs 10 every 2 minutes, up to Rs 100.</li>
+            <li>If nobody accepts, the pay rises automatically each interval until it reaches the maximum.</li>
+            <li>On Warehouse Floor Operations each card shows the current offer and how long it has waited. A red
+                <em>No rider at max pay &mdash; assign manually</em> badge means the offer has sat at the maximum for a full
+                interval: pick a rider in the dropdown on the Ready card and dispatch.</li>
+            <li>Staff can always choose a rider directly; the rider is paid what the offer had reached at that moment
+                (or the base pay).</li>
+            <li>Before accepting, riders see only the drop-off area, item count, cash to collect, rough distance and pay
+                &mdash; never the customer&rsquo;s name, phone or street address.</li>
+            <li>Riders switch themselves Online/Offline, but cannot go offline while they hold an unfinished delivery.
+                A rider can hold at most 2 open deliveries at once. Declined offers come back to that rider if the pay rises.</li>
+        </ul>
 
         <div class="warn">Superadmin housekeeping: the seeded admin account starts with a default password — change
             it, and keep one shared ops login out of customer hands. Backups of the database run from the server;

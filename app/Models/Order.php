@@ -6,6 +6,7 @@ use App\Enums\DeliveryStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Services\Delivery\DeliveryOfferService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,6 +40,8 @@ class Order extends Model
         'delivered_at',
         'cancelled_at',
         'notes',
+        'offer_opened_at',
+        'rider_pay',
     ];
 
     protected function casts(): array
@@ -59,6 +62,47 @@ class Order extends Model
             'dispatched_at' => 'datetime',
             'delivered_at' => 'datetime',
             'cancelled_at' => 'datetime',
+            'offer_opened_at' => 'datetime',
+            'rider_pay' => 'decimal:2',
+        ];
+    }
+
+    /** Rider pay the offer shows right now: base, plus one boost per elapsed interval, capped at max (never below base). */
+    public function currentOfferPay(): ?float
+    {
+        if (! $this->offer_opened_at) {
+            return null;
+        }
+
+        [$base, $boost, $max, $interval] = $this->offerPaySettings();
+        $steps = intdiv((int) $this->offer_opened_at->diffInMinutes(now()), $interval);
+
+        return max($base, min($max, $base + $boost * $steps));
+    }
+
+    /** The pay has sat at its maximum for a full interval and no rider has taken it. */
+    public function offerStuck(): bool
+    {
+        if (! $this->offer_opened_at || $this->delivery_agent_id) {
+            return false;
+        }
+
+        [$base, $boost, $max, $interval] = $this->offerPaySettings();
+        $stepsToMax = $boost > 0 ? (int) ceil(max(0, $max - $base) / $boost) : 0;
+
+        return $this->offer_opened_at->diffInMinutes(now()) >= ($stepsToMax + 1) * $interval;
+    }
+
+    /** @return array{float, float, float, int} */
+    private function offerPaySettings(): array
+    {
+        $city = $this->city;
+
+        return [
+            (float) ($city->rider_base_pay ?? 50),
+            (float) ($city->rider_pay_boost ?? 10),
+            (float) ($city->rider_pay_max ?? 100),
+            max(1, (int) ($city->offer_boost_minutes ?? 2)),
         ];
     }
 
@@ -135,6 +179,11 @@ class Order extends Model
     {
         $oldStatus = $this->order_status;
         $this->order_status = $newStatus;
+
+        // Packing has started and nobody is assigned: put the order on the riders' offer board.
+        if (in_array($newStatus, DeliveryOfferService::OPEN_ORDER_STATUSES, true) && ! $this->delivery_agent_id && ! $this->offer_opened_at) {
+            $this->offer_opened_at = now();
+        }
 
         if ($newStatus === OrderStatus::Confirmed && ! $this->confirmed_at) {
             $this->confirmed_at = now();

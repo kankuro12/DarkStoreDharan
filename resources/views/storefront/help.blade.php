@@ -93,7 +93,7 @@
             <li><a href="{{ url('/rider/register') }}" class="font-semibold text-slate-950 underline">Sign up as a rider</a> with your mobile number (we text you a code), city and vehicle type.</li>
             <li>Complete verification: personal details and address, identity documents, vehicle documents (not needed for bicycles), your home hub and payout details, then accept the rider agreement.</li>
             <li>Our team checks your documents. If something needs fixing you&rsquo;ll get an SMS and only need to re-upload that document.</li>
-            <li>Once approved, attend a short onboarding session. After that, orders start appearing in your rider app at <a href="{{ url('/rider/login') }}" class="font-semibold text-slate-950 underline">Rider Login</a>.</li>
+            <li>Once approved, attend a short onboarding session. After that, go online in your rider app and accept the delivery offers you want: each one shows what you&rsquo;ll earn before you accept, and the pay goes up if an order waits. Sign in at <a href="{{ url('/rider/login') }}" class="font-semibold text-slate-950 underline">Rider Login</a>.</li>
         </ol>
         <p class="text-slate-500">Keep your license, bluebook and insurance up to date: we remind you 30 and 7 days before they expire, and your account pauses if a required document expires until you upload the renewal.</p>
     </section>

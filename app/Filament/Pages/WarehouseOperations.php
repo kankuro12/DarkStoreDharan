@@ -2,12 +2,12 @@
 
 namespace App\Filament\Pages;
 
-use App\Enums\DeliveryStatus;
 use App\Enums\OrderStatus;
 use App\Models\AuditLog;
 use App\Models\DeliveryAgent;
 use App\Models\Order;
 use App\Models\Warehouse;
+use App\Services\Delivery\DeliveryOfferService;
 use App\Support\WarehouseScope;
 use BackedEnum;
 use Filament\Notifications\Notification;
@@ -29,6 +29,9 @@ class WarehouseOperations extends Page
     public string $scannedSku = '';
 
     public ?string $scanResult = null;
+
+    /** Staff's manual rider choice per order id, used when an offer goes unclaimed. */
+    public array $manualRider = [];
 
     public function mount(): void
     {
@@ -157,15 +160,29 @@ class WarehouseOperations extends Page
     {
         $order = $this->findScopedOrder($orderId);
 
-        if ($riderId) {
-            $order->delivery_agent_id = $riderId;
-            $order->delivery_status = DeliveryStatus::Assigned;
-        } else {
-            // Pick first available rider for the city
+        $riderId ??= $this->manualRider[$orderId] ?? null;
+        $offers = app(DeliveryOfferService::class);
+
+        if ($riderId && (int) $order->delivery_agent_id !== (int) $riderId) {
+            $rider = DeliveryAgent::eligibleForDispatch()->where('city_id', $order->city_id)->find($riderId);
+            abort_unless($rider, 422, 'That rider cannot take orders in this city.');
+
+            // The board can be stale: never replace a rider who accepted since staff made their pick.
+            if ($order->delivery_agent_id || ! $offers->assignManually($order, $rider, auth()->id())) {
+                unset($this->manualRider[$orderId]);
+                Notification::make()
+                    ->title('A rider already accepted this order')
+                    ->body('Rider: '.($order->fresh()->deliveryAgent?->name ?? 'unknown').'. Dispatch again to hand it to them.')
+                    ->warning()
+                    ->send();
+
+                return;
+            }
+        } elseif (! $order->delivery_agent_id) {
+            // Nobody accepted the offer: fall back to the first eligible rider in the city.
             $rider = DeliveryAgent::eligibleForDispatch()->where('city_id', $order->city_id)->first();
             if ($rider) {
-                $order->delivery_agent_id = $rider->id;
-                $order->delivery_status = DeliveryStatus::Assigned;
+                $offers->assignManually($order, $rider, auth()->id());
             }
         }
 

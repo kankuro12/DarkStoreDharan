@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Rider\Pages\Auth\RiderRegister;
+use App\Filament\Rider\Pages\DeliveryOffers;
 use App\Filament\Rider\Pages\MyDeliveries;
 use App\Filament\Rider\Pages\RequestLocationChange;
 use App\Filament\Rider\Pages\RiderAccountStatus;
@@ -40,12 +41,13 @@ class RiderPanelProvider extends PanelProvider
                 'primary' => Color::Emerald,
             ])
             ->pages([
+                DeliveryOffers::class,
                 MyDeliveries::class,
                 RiderOnboarding::class,
                 RiderAccountStatus::class,
                 RequestLocationChange::class,
             ])
-            ->homeUrl(fn (): string => auth('delivery')->user()?->isApproved() ? MyDeliveries::getUrl() : RiderAccountStatus::getUrl())
+            ->homeUrl(fn (): string => auth('delivery')->user()?->isApproved() ? DeliveryOffers::getUrl() : RiderAccountStatus::getUrl())
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,

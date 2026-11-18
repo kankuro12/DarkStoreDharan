@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\DeliveryStatus;
 use App\Enums\KycDocumentType;
+use App\Enums\OrderStatus;
 use App\Enums\PayoutMethod;
 use App\Enums\VehicleType;
 use App\Enums\VerificationStatus;
@@ -155,7 +156,34 @@ class DeliveryAgent extends Authenticatable implements FilamentUser
     {
         return $this->orders()
             ->where('delivery_status', DeliveryStatus::Assigned->value)
-            ->update(['delivery_agent_id' => null, 'delivery_status' => DeliveryStatus::Pending->value]);
+            ->update(['delivery_agent_id' => null, 'delivery_status' => DeliveryStatus::Pending->value, 'rider_pay' => null]);
+    }
+
+    /** Assigned or on-the-road deliveries the rider still has to finish. */
+    public function openDeliveriesCount(): int
+    {
+        return $this->orders()
+            ->whereIn('delivery_status', [DeliveryStatus::Assigned->value, DeliveryStatus::PickedUp->value, DeliveryStatus::OutForDelivery->value])
+            ->where('order_status', '!=', OrderStatus::Cancelled->value)
+            ->count();
+    }
+
+    public function goOnline(): bool
+    {
+        if (! static::eligibleForDispatch()->whereKey($this->id)->exists()) {
+            return false;
+        }
+
+        return $this->update(['availability' => 'available']);
+    }
+
+    public function goOffline(): bool
+    {
+        if ($this->openDeliveriesCount() > 0) {
+            return false;
+        }
+
+        return $this->update(['availability' => 'offline']);
     }
 
     /** Login is allowed until an admin hard-blocks it; unapproved riders are confined by EnsureRiderApproved. */
