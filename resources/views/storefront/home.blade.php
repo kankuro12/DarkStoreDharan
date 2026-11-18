@@ -64,7 +64,8 @@
     @if(!empty($banners))
         <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory scrollbar-none pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
             @foreach($banners as $banner)
-                <div class="snap-center shrink-0 w-full sm:w-[85%] md:w-3/4 rounded-2xl overflow-hidden relative">
+                {{-- Narrower slides let the next banner peek in; a lone banner fills the row. --}}
+                <div class="snap-center shrink-0 w-full {{ count($banners) > 1 ? 'sm:w-[85%] md:w-3/4' : '' }} rounded-2xl overflow-hidden relative">
                     @if(!empty($banner['link_url']))
                         <a href="{{ $banner['link_url'] }}" class="block">
                     @endif
