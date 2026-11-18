@@ -84,14 +84,14 @@ Enums (`app/Enums`): `OrderStatus` (pending → confirmed → processing → pac
 | `Checkout/CheckoutService` | `placeOrder()` and `confirmPrepaidOrder()` |
 | `Returns/ReturnService` | request → review → inspect & restock → refund |
 | `Sms/SmsService` | `SMS_DRIVER=log` (default) or `sparrow` (Sparrow SMS, Nepal) |
-| `Auth/OtpService` | Issue/verify phone OTPs |
+| `Auth/OtpService` | Issue/verify phone OTPs. `OTP_TEST_MODE=true` makes `*_signup` purposes (rider/vendor signup) use `OTP_TEST_CODE` with no SMS; login/password reset never affected (`config/otp.php`) |
 
 ### Checkout flow (`CheckoutService::placeOrder`)
 1. Resolve/create address → 2. `WarehouseSelector` → 3. `PricingService` recalculation → 4. payment-method eligibility → 5. in one `DB::transaction`: reserve stock (25 min hold), create order + item snapshots, COD confirms stock immediately, status log, coupon usage, clear cart, audit log → 6. dispatch `SendOrderTrackingSms`.
 Prepaid: gateway hits `POST /api/payments/callback` → amount check → `confirmPrepaidOrder`. Unpaid holds are freed by `ReleaseExpiredReservations` (scheduled every 5 min).
 
 ## Routes
-- `routes/web.php` — storefront: home, `/products/{slug}`, auth, `/account/*`, `/cart/*`, `/checkout`, `/orders/{orderNumber}/tracking|return|cancel`, legal pages.
+- `routes/web.php` — storefront: home, `/products/{slug}`, auth, `/account/*`, `/cart/*`, `/checkout`, `/orders/{orderNumber}/tracking|return|cancel`, legal pages (`/privacy-policy`, `/terms-of-service`), public `/help` (how to order/pay/return, how to become a rider or supplier).
 - `routes/api.php` — JSON API mirroring storefront: cities, categories, products, cart, checkout validate, orders, payment callback, `/api/health`.
 - `routes/console.php` — scheduler: reservations release (5 min), sitemap (daily).
 - `/up` — Laravel health check.
@@ -102,6 +102,8 @@ Prepaid: gateway hits `POST /api/payments/callback` → amount check → `confir
 
 ## Storefront views
 `resources/views/layouts/storefront.blade.php` (main layout) + `resources/views/storefront/*`. `AppServiceProvider` view composer injects `allCities`, `currentCity`, `cartItemCount`, `cartDetailed`, `storeSettings` into every storefront view.
+- **Popups:** `Popup` model + admin "Storefront popups" resource. Placement `all|home|product|path` (product_id optional = all product pages; target_path supports `*` wildcards); most specific match wins, newest first. Frequency `once` (localStorage, re-shows after edit) / `session` / `always`. Rendered by `layouts/partials/popup.blade.php` (native `<dialog>`), hidden while no city is chosen. Images on the `public` disk under `popups/`.
+- Privacy page derives `privacy@<domain>` from `APP_URL`.
 
 ## Tests (`tests/Feature`)
 `FastDeliveryArchitectureTest` (core flows), `InventoryLedgerTest`, `CustomerGuardTest`, `WarehouseManagerScopeTest`, `RiderPanelTest`, `CategoryHierarchyTest`, `AdminManualTest`.

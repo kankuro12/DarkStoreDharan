@@ -331,6 +331,7 @@
                 <div class="space-y-2">
                     <h5 class="font-bold text-slate-900 uppercase tracking-wider text-[11px]">Operations & Legal</h5>
                     <ul class="space-y-1.5 text-[11px]">
+                        <li><a href="{{ route('storefront.help') }}" class="hover:text-slate-900 transition">Help &amp; How-to</a></li>
                         <li><a href="{{ route('storefront.contact') }}" class="hover:text-slate-900 transition">Contact Us</a></li>
                         <li><a href="{{ route('storefront.privacy') }}" class="hover:text-slate-900 transition">Privacy & Data Policy</a></li>
                         <li><a href="{{ route('storefront.terms') }}" class="hover:text-slate-900 transition">Terms of Service</a></li>
@@ -737,5 +738,6 @@
         });
         @endif
     </script>
+    @include('layouts.partials.popup')
 </body>
 </html>

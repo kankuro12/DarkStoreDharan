@@ -54,6 +54,9 @@
             <a href="#location-requests">22. Location change requests</a>
             <a href="#vendor-payouts">23. Vendor payouts</a>
             <a href="#expiry">24. Expiry suspensions</a>
+            <a href="#popups">25. Storefront popups</a>
+            <a href="#public-pages">26. Help &amp; legal pages</a>
+            <a href="#test-otp">27. Test OTP mode</a>
         </div>
 
         <h2 id="signing-in">1. Signing In</h2>
@@ -410,6 +413,43 @@
             document themselves from their status page; review and approve it as usual. Suspensions you make by hand
             can only be lifted by an admin.
         </p>
+
+        <h2 id="popups">25. Storefront popups</h2>
+        <p>
+            Announcements (sales, delivery notices, new products) shown to customers as a popup. Menu:
+            <strong>Storefront popups</strong> &rarr; <em>New popup</em>.
+        </p>
+        <ul>
+            <li><strong>Content:</strong> title, optional text, image and one button. The button link is a page on this
+                site such as <code>/products/ilam-tea</code> or a full <code>https://</code> link.</li>
+            <li><strong>Where:</strong> <em>Every storefront page</em>, <em>Home page only</em>, <em>Product page(s)</em>
+                (pick one product, or leave empty for all product pages) or <em>Specific page</em> by path, e.g.
+                <code>/checkout</code> or <code>/help*</code> (<code>*</code> matches anything).</li>
+            <li><strong>How often:</strong> <em>Once per visitor</em> (shows again after you edit it), <em>once per browser
+                session</em>, or <em>every page load</em>.</li>
+            <li><strong>When:</strong> optional <em>Show from</em> / <em>Show until</em>; switch <em>Active</em> off to hide it
+                at once.</li>
+        </ul>
+        <div class="note">Only one popup shows on a page: the most specific one wins (product, then page path, then home,
+            then every page), and among equals the newest. Popups are not shown until the customer has chosen a city.</div>
+
+        <h2 id="public-pages">26. Help &amp; legal pages</h2>
+        <p>
+            The public <code>/help</code> page (footer: <em>Help &amp; How-to</em>) explains ordering, delivery, payments,
+            cancellations and returns, accounts, and step by step how to become a rider or supplier, with the documents
+            needed. Point applicants there before they sign up. The <code>/privacy-policy</code> page is the formal privacy
+            policy; its contact address is <code>privacy@</code> plus the site domain, so make sure that mailbox exists.
+            Changing the text of these pages needs the developer.
+        </p>
+
+        <h2 id="test-otp">27. Test OTP mode</h2>
+        <p>
+            For testing rider and vendor signup before SMS is live, the developer can set <code>OTP_TEST_MODE=true</code>
+            on the server. Signup then accepts the fixed code in <code>OTP_TEST_CODE</code> (default <code>123456</code>)
+            and sends no SMS. Customer login and password reset always use real SMS codes.
+        </p>
+        <div class="warn">While test mode is on, anyone can sign up as a rider or vendor with a phone number they do not own.
+            Turn it off as soon as SMS works, and check new applicants&rsquo; phone numbers during review.</div>
 
         <div class="warn">Superadmin housekeeping: the seeded admin account starts with a default password — change
             it, and keep one shared ops login out of customer hands. Backups of the database run from the server;

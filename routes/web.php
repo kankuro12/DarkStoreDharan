@@ -91,6 +91,7 @@ Route::get('/admin/kyc-documents/{document}/{side}', KycDocumentFileController::
 // Legal & Compliance Pages
 Route::view('/privacy-policy', 'storefront.privacy')->name('storefront.privacy');
 Route::view('/terms-of-service', 'storefront.terms')->name('storefront.terms');
+Route::view('/help', 'storefront.help')->name('storefront.help');
 
 // Local Environment Development Helper
 if (app()->environment('local')) {

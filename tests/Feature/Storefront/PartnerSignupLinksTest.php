@@ -29,4 +29,23 @@ class PartnerSignupLinksTest extends TestCase
             ->assertSee('mailto:privacy@shop.example.com', false)
             ->assertDontSee('privacy@darkstore.np');
     }
+
+    public function test_help_page_explains_how_to_become_rider_and_supplier(): void
+    {
+        $this->get(route('storefront.help'))
+            ->assertOk()
+            ->assertSee('How to become a delivery rider')
+            ->assertSee('How to supply products to us')
+            ->assertSee(url('/rider/register'), false)
+            ->assertSee(url('/vendor/register'), false);
+
+        $this->get(route('storefront.contact'))->assertSee(route('storefront.help'), false);
+    }
+
+    public function test_privacy_policy_has_legal_sections_with_technical_measures_as_subsection(): void
+    {
+        $this->get(route('storefront.privacy'))
+            ->assertOk()
+            ->assertSeeInOrder(['Individual Privacy Act, 2075', '8. Security of personal data', '8.2 Technical measures', '9. Your rights', '16. Contact and grievances']);
+    }
 }

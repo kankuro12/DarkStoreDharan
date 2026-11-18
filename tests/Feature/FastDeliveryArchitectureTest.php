@@ -623,7 +623,7 @@ class FastDeliveryArchitectureTest extends TestCase
         $resPrivacy = $this->get('/privacy-policy');
         $resPrivacy->assertStatus(200);
         $resPrivacy->assertSee('Privacy');
-        $resPrivacy->assertSee('Customer Data Protection Policy');
+        $resPrivacy->assertSee('Individual Privacy Act');
 
         $resTerms = $this->get('/terms-of-service');
         $resTerms->assertStatus(200);
