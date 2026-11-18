@@ -124,6 +124,7 @@ class OrderResource extends Resource
                                 TextEntry::make('subtotal')->money('NPR'),
                                 TextEntry::make('discount')->money('NPR'),
                                 TextEntry::make('delivery_fee')->label('Delivery Fee')->money('NPR'),
+                                TextEntry::make('rider_pay')->label('Rider Pay')->money('NPR')->placeholder('Not assigned'),
                                 TextEntry::make('grand_total')->label('Grand Total')->money('NPR')->weight('bold'),
                             ]),
                     ]),
