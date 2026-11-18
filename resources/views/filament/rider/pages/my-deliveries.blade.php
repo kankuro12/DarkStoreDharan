@@ -44,6 +44,10 @@
             <div class="label">Cash to Collect</div>
             <div class="value">Rs {{ number_format($this->stats['cashToCollect']) }}</div>
         </div>
+        <div class="rider-stat">
+            <div class="label">Earned Today</div>
+            <div class="value">Rs {{ number_format($this->stats['earnedToday']) }}</div>
+        </div>
     </div>
 
     @forelse ($this->orders as $order)
@@ -52,6 +56,9 @@
                 <span class="order-no">#{{ $order->order_number }}</span>
                 <span class="badge">{{ $order->delivery_status->label() }}</span>
                 <span class="badge">{{ $order->order_status->label() }}</span>
+                @if ($order->rider_pay !== null)
+                    <span class="badge cash">Earning Rs {{ number_format((float) $order->rider_pay) }}</span>
+                @endif
             </div>
 
             <div class="grid2">
