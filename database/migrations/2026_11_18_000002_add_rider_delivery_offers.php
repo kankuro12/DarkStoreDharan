@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -19,6 +20,12 @@ return new class extends Migration
             $table->timestamp('offer_opened_at')->nullable();
             $table->decimal('rider_pay', 8, 2)->nullable();
         });
+
+        // Orders already being packed at deploy time go straight onto the riders' offer board.
+        DB::table('orders')
+            ->whereNull('delivery_agent_id')
+            ->whereIn('order_status', ['processing', 'packed', 'ready_for_dispatch'])
+            ->update(['offer_opened_at' => now()]);
 
         Schema::create('order_offer_declines', function (Blueprint $table) {
             $table->id();

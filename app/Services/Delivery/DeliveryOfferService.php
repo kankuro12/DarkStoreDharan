@@ -39,7 +39,7 @@ class DeliveryOfferService
     public function accept(Order $order, DeliveryAgent $rider): bool
     {
         $eligible = DeliveryAgent::available()->whereKey($rider->id)->exists()
-            && $order->city_id === $rider->city_id
+            && (int) $order->city_id === (int) $rider->city_id
             && $rider->openDeliveriesCount() < self::MAX_OPEN_DELIVERIES;
 
         if (! $eligible) {
@@ -70,15 +70,39 @@ class DeliveryOfferService
         );
     }
 
-    public function assignManually(Order $order, DeliveryAgent $rider, ?int $userId): void
+    /**
+     * Staff assignment. Only applies if the order's rider is still what the caller loaded,
+     * so a rider who accepted in the meantime is never silently replaced.
+     */
+    public function assignManually(Order $order, DeliveryAgent $rider, ?int $userId): bool
     {
-        $order->forceFill([
-            'delivery_agent_id' => $rider->id,
-            'delivery_status' => DeliveryStatus::Assigned,
-            'rider_pay' => $order->currentOfferPay() ?? (float) ($order->city?->rider_base_pay ?? 0),
-        ])->save();
+        $pay = $order->currentOfferPay() ?? (float) ($order->city?->rider_base_pay ?? 0);
+        $seen = $order->getOriginal('delivery_agent_id');
 
-        AuditLog::record('delivery_manually_assigned', $order, null, ['delivery_agent_id' => $rider->id, 'rider_pay' => $order->rider_pay], 'Staff assigned rider', $userId);
+        $updated = Order::whereKey($order->id)
+            ->when($seen, fn ($q) => $q->where('delivery_agent_id', $seen), fn ($q) => $q->whereNull('delivery_agent_id'))
+            ->update([
+                'delivery_agent_id' => $rider->id,
+                'delivery_status' => DeliveryStatus::Assigned->value,
+                'rider_pay' => $pay,
+            ]) === 1;
+
+        if ($updated) {
+            $order->refresh();
+            AuditLog::record('delivery_manually_assigned', $order, ['delivery_agent_id' => $seen], ['delivery_agent_id' => $rider->id, 'rider_pay' => $pay], 'Staff assigned rider', $userId);
+        }
+
+        return $updated;
+    }
+
+    /** Staff take the rider off an order that has not been picked up; it goes back on the board. */
+    public function unassign(Order $order, ?int $userId): void
+    {
+        $seen = $order->getOriginal('delivery_agent_id');
+
+        $order->forceFill(['delivery_agent_id' => null, 'delivery_status' => DeliveryStatus::Pending, 'rider_pay' => null])->save();
+
+        AuditLog::record('delivery_unassigned', $order, ['delivery_agent_id' => $seen], ['delivery_agent_id' => null], 'Staff removed rider', $userId);
     }
 
     public static function distanceKm(Order $order): ?float

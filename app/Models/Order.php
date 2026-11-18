@@ -6,6 +6,7 @@ use App\Enums\DeliveryStatus;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 use App\Enums\PaymentStatus;
+use App\Services\Delivery\DeliveryOfferService;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -180,7 +181,7 @@ class Order extends Model
         $this->order_status = $newStatus;
 
         // Packing has started and nobody is assigned: put the order on the riders' offer board.
-        if ($newStatus === OrderStatus::Processing && ! $this->delivery_agent_id && ! $this->offer_opened_at) {
+        if (in_array($newStatus, DeliveryOfferService::OPEN_ORDER_STATUSES, true) && ! $this->delivery_agent_id && ! $this->offer_opened_at) {
             $this->offer_opened_at = now();
         }
 

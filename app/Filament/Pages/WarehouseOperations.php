@@ -163,10 +163,21 @@ class WarehouseOperations extends Page
         $riderId ??= $this->manualRider[$orderId] ?? null;
         $offers = app(DeliveryOfferService::class);
 
-        if ($riderId) {
+        if ($riderId && (int) $order->delivery_agent_id !== (int) $riderId) {
             $rider = DeliveryAgent::eligibleForDispatch()->where('city_id', $order->city_id)->find($riderId);
             abort_unless($rider, 422, 'That rider cannot take orders in this city.');
-            $offers->assignManually($order, $rider, auth()->id());
+
+            // The board can be stale: never replace a rider who accepted since staff made their pick.
+            if ($order->delivery_agent_id || ! $offers->assignManually($order, $rider, auth()->id())) {
+                unset($this->manualRider[$orderId]);
+                Notification::make()
+                    ->title('A rider already accepted this order')
+                    ->body('Rider: '.($order->fresh()->deliveryAgent?->name ?? 'unknown').'. Dispatch again to hand it to them.')
+                    ->warning()
+                    ->send();
+
+                return;
+            }
         } elseif (! $order->delivery_agent_id) {
             // Nobody accepted the offer: fall back to the first eligible rider in the city.
             $rider = DeliveryAgent::eligibleForDispatch()->where('city_id', $order->city_id)->first();
